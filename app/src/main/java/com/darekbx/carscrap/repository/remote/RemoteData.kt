@@ -10,11 +10,13 @@ import com.darekbx.carscrap.repository.local.dao.CarModelDao
 import com.darekbx.carscrap.repository.local.dto.CarModel
 import com.darekbx.carscrap.repository.remote.model.Car
 import com.darekbx.carscrap.repository.remote.model.Car.Companion.toCar
+import com.darekbx.carscrap.utils.DateTimeFormatter
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -23,27 +25,59 @@ import kotlin.time.measureTime
 class RemoteData(
     private val dataStore: DataStore<Preferences>,
     private val carModelDao: CarModelDao,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val dateTimeFormatter: DateTimeFormatter,
+    private val limit: Int? = 100
 ) {
 
-    suspend fun synchronize() {
+    enum class SynchronizationStep {
+        AUTHENTICATE,
+        FETCH_DATA,
+        SAVE_TIMESTAMP,
+        STORE_DATA,
+        COMPLETED,
+        FAILED
+    }
+
+    suspend fun synchronize(onSynchronizationStep: SynchronizationStep.() -> Unit) {
         val duration = measureTime {
-            // 1. Authenticate
-            authenticate() ?: return
+            try {
+                // 1. Authenticate
+                publishStatus(onSynchronizationStep, SynchronizationStep.AUTHENTICATE)
+                authenticate() ?: return
 
-            // 2. Read last fetch timestamp
-            val lastFetchTimestamp = lastFetchTimesamp() ?: 0L
+                // 2. Read last fetch timestamp
+                val lastFetchTimestamp = lastFetchTimesamp() ?: 0L
 
-            // 3. Fetch remote ids
-            val cars = fetchData(lastFetchTimestamp)
+                // 3. Fetch remote ids
+                publishStatus(onSynchronizationStep, SynchronizationStep.FETCH_DATA)
+                val cars = fetchData(lastFetchTimestamp)
 
-            // 4. Save timestamp
-            saveFetchTimestamp()
+                // 4. Save timestamp
+                publishStatus(onSynchronizationStep, SynchronizationStep.SAVE_TIMESTAMP)
+                saveFetchTimestamp()
 
-            // 5. Store data in local database
-            storeData(cars)
+                // 5. Store data in local database
+                publishStatus(onSynchronizationStep, SynchronizationStep.STORE_DATA)
+                storeData(cars)
+
+                publishStatus(onSynchronizationStep, SynchronizationStep.COMPLETED)
+            } catch (e: Exception) {
+                Log.e(TAG, "Synchronization failed", e)
+                publishStatus(onSynchronizationStep, SynchronizationStep.FAILED)
+            }
         }
         Log.v(TAG, "Synchronization completed, took $duration")
+    }
+
+    private suspend fun publishStatus(onSynchronizationStep: SynchronizationStep.() -> Unit, status:SynchronizationStep) {
+        onSynchronizationStep(status)
+        delay(1000)
+    }
+
+    suspend fun lastFetchDateTime(): String? {
+        return lastFetchTimesamp()
+            ?.let { dateTimeFormatter.formatTimestamp(it) }
     }
 
     /**
@@ -52,13 +86,17 @@ class RemoteData(
     private suspend fun fetchData(lastFetchTimestamp: Long): List<Car> {
         Log.v(TAG, "Start fetching data...")
         val timestamp = Timestamp(seconds = lastFetchTimestamp / 1000, nanoseconds = 0)
-        val metadata = Firebase
+        var query = Firebase
             .firestore
             .collection(CARS)
             .whereGreaterThan(CREATED_AT, timestamp)
-            .limit(25)
-            .get()
-            .await()
+
+        if (limit != null) {
+            query = query.limit(limit.toLong())
+        }
+
+        val metadata = query.get().await()
+
         Log.v(TAG, "Fetched ${metadata.documents.size} documents")
         return metadata.documents.map { it.toCar() }
     }
