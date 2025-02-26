@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,11 +18,16 @@ import org.koin.compose.KoinApplication
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -41,19 +45,60 @@ private enum class ProgressStatus {
 }
 
 @Composable
-fun SynchronizeDialog(synchronizeViewModel: SynchronizeViewModel = koinViewModel()) {
+fun SynchronizeBox(synchronizeViewModel: SynchronizeViewModel = koinViewModel()) {
     val status by synchronizeViewModel.synchronizationStep
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .height(300.dp)
-            .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
-    ) {
-        StatusRow(Modifier.fillMaxWidth(), status)
-        Button(onClick = {
-            synchronizeViewModel.synchronize()
-        }) { Text("Start") }
+    var lastFetchDateTime by remember { mutableStateOf<String?>(null) }
+    var lastStatus by remember { mutableStateOf<RemoteData.SynchronizationStep?>(null) }
+
+    if (status !is RemoteData.SynchronizationStep.Failed) {
+        lastStatus = status
+    }
+
+    LaunchedEffect(Unit) {
+        lastFetchDateTime = synchronizeViewModel.lastFetchDateTime()
+    }
+
+    Box {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            StatusRow(Modifier.fillMaxWidth(), lastStatus)
+            Text(
+                text = lastFetchDateTime?.let { "Last sync time: $it" } ?: "Last sync: never",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Button(
+                modifier = Modifier.padding(bottom = 8.dp),
+                onClick = { synchronizeViewModel.synchronize() }) {
+                Text("Synchronize data")
+            }
+        }
+
+        status?.let {
+            if (it is RemoteData.SynchronizationStep.Failed) {
+                AlertDialog(
+                    onDismissRequest = { synchronizeViewModel.reset() },
+                    title = {
+                        Text(
+                            "Synchronization failed",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    text = { Text("Error: ${it.error}") },
+                    confirmButton = {
+                        Button(onClick = { synchronizeViewModel.reset() }) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -66,17 +111,17 @@ private fun StatusRow(modifier: Modifier, step: RemoteData.SynchronizationStep?)
         verticalAlignment = Alignment.CenterVertically
     ) {
         val steps = listOf(
-            RemoteData.SynchronizationStep.AUTHENTICATE to R.drawable.ic_login,
-            RemoteData.SynchronizationStep.FETCH_DATA to R.drawable.ic_cloud_download,
-            RemoteData.SynchronizationStep.SAVE_TIMESTAMP to R.drawable.ic_save,
-            RemoteData.SynchronizationStep.STORE_DATA to R.drawable.ic_database,
-            RemoteData.SynchronizationStep.COMPLETED to R.drawable.ic_done
+            RemoteData.SynchronizationStep.Authenticate to R.drawable.ic_login,
+            RemoteData.SynchronizationStep.FetchData to R.drawable.ic_cloud_download,
+            RemoteData.SynchronizationStep.SaveTimestamp to R.drawable.ic_save,
+            RemoteData.SynchronizationStep.StoreData to R.drawable.ic_database,
+            RemoteData.SynchronizationStep.Completed to R.drawable.ic_done
         )
 
         steps.forEachIndexed { index, (currentStep, iconResId) ->
             val status = when {
                 step == null -> ProgressStatus.IDLE
-                step == RemoteData.SynchronizationStep.COMPLETED -> ProgressStatus.DONE
+                step == RemoteData.SynchronizationStep.Completed -> ProgressStatus.DONE
                 step == currentStep -> ProgressStatus.IN_PROGRESS
                 step > currentStep -> ProgressStatus.DONE
                 else -> ProgressStatus.IDLE
@@ -106,53 +151,66 @@ private fun ProgressItem(
     status: ProgressStatus = ProgressStatus.IDLE
 ) {
     Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
-        if (status == ProgressStatus.IDLE) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.05F)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(iconResId),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = Color.Gray
-                )
-            }
-        } else if (status == ProgressStatus.IN_PROGRESS) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .rotate(-90F),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.Black.copy(alpha = 0.05F),
-                strokeCap = StrokeCap.Square,
-                strokeWidth = 6.dp
-            )
-            Icon(
-                painter = painterResource(iconResId),
-                modifier = Modifier.size(24.dp),
-                contentDescription = null,
-                tint = Color.Gray
-            )
-        } else if (status == ProgressStatus.DONE) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_done),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = Color.White
-                )
-            }
+        when (status) {
+            ProgressStatus.IDLE -> IdleItem(iconResId)
+            ProgressStatus.IN_PROGRESS -> InProgressItem(iconResId)
+            ProgressStatus.DONE -> DoneItem()
         }
+    }
+}
+
+@Composable
+private fun DoneItem() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_done),
+            modifier = Modifier.size(24.dp),
+            contentDescription = null,
+            tint = Color.White
+        )
+    }
+}
+
+@Composable
+private fun InProgressItem(iconResId: Int) {
+    CircularProgressIndicator(
+        modifier = Modifier
+            .fillMaxSize()
+            .rotate(-90F),
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = Color.Black.copy(alpha = 0.05F),
+        strokeCap = StrokeCap.Square,
+        strokeWidth = 6.dp
+    )
+    Icon(
+        painter = painterResource(iconResId),
+        modifier = Modifier.size(24.dp),
+        contentDescription = null,
+        tint = Color.Gray
+    )
+}
+
+@Composable
+private fun IdleItem(iconResId: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.05F)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(iconResId),
+            modifier = Modifier.size(24.dp),
+            contentDescription = null,
+            tint = Color.Gray
+        )
     }
 }
 
@@ -230,7 +288,7 @@ fun StatusRowS0Preview() {
 fun StatusRowS1Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
-            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.AUTHENTICATE)
+            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.Authenticate)
         }
     }
 }
@@ -240,7 +298,7 @@ fun StatusRowS1Preview() {
 fun StatusRowS2Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
-            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.FETCH_DATA)
+            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.FetchData)
         }
     }
 }
@@ -250,7 +308,7 @@ fun StatusRowS2Preview() {
 fun StatusRowS3Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
-            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.SAVE_TIMESTAMP)
+            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.SaveTimestamp)
         }
     }
 }
@@ -260,7 +318,7 @@ fun StatusRowS3Preview() {
 fun StatusRowS4Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
-            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.STORE_DATA)
+            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.StoreData)
         }
     }
 }
@@ -270,7 +328,7 @@ fun StatusRowS4Preview() {
 fun StatusRowS5Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
-            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.COMPLETED)
+            StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.Completed)
         }
     }
 }
@@ -282,7 +340,7 @@ fun SynchronizeDialogPreview() {
         KoinApplication(application = { modules(appModule) }) {
             Surface(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
                 Box(contentAlignment = Alignment.Center) {
-                    SynchronizeDialog()
+                    SynchronizeBox()
                 }
             }
         }

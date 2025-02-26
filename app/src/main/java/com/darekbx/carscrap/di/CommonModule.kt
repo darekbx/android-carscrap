@@ -29,7 +29,7 @@ val appModule = module {
     single { DateTimeFormatter() }
     single { androidContext().dataStore }
 
-    factory { RemoteData(get(), get(), get(), get()) }
+    factory { RemoteData(get(), get(), get(), get(), limit = 25) }
 
     viewModel { SynchronizeViewModel(get()) }
 }

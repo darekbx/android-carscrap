@@ -18,4 +18,12 @@ class SynchronizeViewModel(private val remoteData: RemoteData): ViewModel() {
             }
         }
     }
+
+    fun reset() {
+        synchronizationStep.value = null
+    }
+
+    suspend fun lastFetchDateTime(): String? {
+        return remoteData.lastFetchDateTime()
+    }
 }

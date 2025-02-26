@@ -27,50 +27,57 @@ class RemoteData(
     private val carModelDao: CarModelDao,
     private val timeProvider: TimeProvider,
     private val dateTimeFormatter: DateTimeFormatter,
-    private val limit: Int? = 100
+    private val limit: Int? = null
 ) {
 
-    enum class SynchronizationStep {
-        AUTHENTICATE,
-        FETCH_DATA,
-        SAVE_TIMESTAMP,
-        STORE_DATA,
-        COMPLETED,
-        FAILED
+    sealed class SynchronizationStep(val index: Int) : Comparable<SynchronizationStep> {
+        data object Authenticate : SynchronizationStep(index = 0)
+        data object FetchData : SynchronizationStep(index = 1)
+        data object SaveTimestamp : SynchronizationStep(index = 2)
+        data object StoreData : SynchronizationStep(index = 3)
+        data object Completed : SynchronizationStep(index = 4)
+        data class Failed(val error: Throwable) : SynchronizationStep(index = 5)
+
+        override fun compareTo(other: SynchronizationStep): Int {
+            return this.index.compareTo(other.index)
+        }
     }
 
     suspend fun synchronize(onSynchronizationStep: SynchronizationStep.() -> Unit) {
         val duration = measureTime {
             try {
                 // 1. Authenticate
-                publishStatus(onSynchronizationStep, SynchronizationStep.AUTHENTICATE)
+                publishStatus(onSynchronizationStep, SynchronizationStep.Authenticate)
                 authenticate() ?: return
 
                 // 2. Read last fetch timestamp
                 val lastFetchTimestamp = lastFetchTimesamp() ?: 0L
 
                 // 3. Fetch remote ids
-                publishStatus(onSynchronizationStep, SynchronizationStep.FETCH_DATA)
+                publishStatus(onSynchronizationStep, SynchronizationStep.FetchData)
                 val cars = fetchData(lastFetchTimestamp)
 
                 // 4. Save timestamp
-                publishStatus(onSynchronizationStep, SynchronizationStep.SAVE_TIMESTAMP)
+                publishStatus(onSynchronizationStep, SynchronizationStep.SaveTimestamp)
                 saveFetchTimestamp()
 
                 // 5. Store data in local database
-                publishStatus(onSynchronizationStep, SynchronizationStep.STORE_DATA)
+                publishStatus(onSynchronizationStep, SynchronizationStep.StoreData)
                 storeData(cars)
 
-                publishStatus(onSynchronizationStep, SynchronizationStep.COMPLETED)
+                publishStatus(onSynchronizationStep, SynchronizationStep.Completed)
             } catch (e: Exception) {
                 Log.e(TAG, "Synchronization failed", e)
-                publishStatus(onSynchronizationStep, SynchronizationStep.FAILED)
+                publishStatus(onSynchronizationStep, SynchronizationStep.Failed(e))
             }
         }
         Log.v(TAG, "Synchronization completed, took $duration")
     }
 
-    private suspend fun publishStatus(onSynchronizationStep: SynchronizationStep.() -> Unit, status:SynchronizationStep) {
+    private suspend fun publishStatus(
+        onSynchronizationStep: SynchronizationStep.() -> Unit,
+        status: SynchronizationStep
+    ) {
         onSynchronizationStep(status)
         delay(1000)
     }
