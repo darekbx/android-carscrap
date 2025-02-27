@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.darekbx.carscrap.di.appModule
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
-import org.koin.compose.KoinApplication
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -33,7 +30,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Devices
 import com.darekbx.carscrap.R
 import com.darekbx.carscrap.repository.remote.RemoteData
 import org.koin.androidx.compose.koinViewModel
@@ -45,7 +41,7 @@ private enum class ProgressStatus {
 }
 
 @Composable
-fun SynchronizeBox(synchronizeViewModel: SynchronizeViewModel = koinViewModel()) {
+fun SynchronizeBox(modifier: Modifier, synchronizeViewModel: SynchronizeViewModel = koinViewModel()) {
     val status by synchronizeViewModel.synchronizationStep
     var lastFetchDateTime by remember { mutableStateOf<String?>(null) }
     var lastStatus by remember { mutableStateOf<RemoteData.SynchronizationStep?>(null) }
@@ -58,46 +54,42 @@ fun SynchronizeBox(synchronizeViewModel: SynchronizeViewModel = koinViewModel())
         lastFetchDateTime = synchronizeViewModel.lastFetchDateTime()
     }
 
-    Box {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            StatusRow(Modifier.fillMaxWidth(), lastStatus)
-            Text(
-                text = lastFetchDateTime?.let { "Last sync time: $it" } ?: "Last sync: never",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Button(
-                modifier = Modifier.padding(bottom = 8.dp),
-                onClick = { synchronizeViewModel.synchronize() }) {
-                Text("Synchronize data")
-            }
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        StatusRow(Modifier.fillMaxWidth(), lastStatus)
+        Text(
+            text = lastFetchDateTime?.let { "Last sync time: $it" } ?: "Last sync: never",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Button(
+            modifier = Modifier.padding(bottom = 8.dp),
+            onClick = { synchronizeViewModel.synchronize() }) {
+            Text("Synchronize data")
         }
+    }
 
-        status?.let {
-            if (it is RemoteData.SynchronizationStep.Failed) {
-                AlertDialog(
-                    onDismissRequest = { synchronizeViewModel.reset() },
-                    title = {
-                        Text(
-                            "Synchronization failed",
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    },
-                    text = { Text("Error: ${it.error}") },
-                    confirmButton = {
-                        Button(onClick = { synchronizeViewModel.reset() }) {
-                            Text("OK")
-                        }
+    status?.let {
+        if (it is RemoteData.SynchronizationStep.Failed) {
+            AlertDialog(
+                onDismissRequest = { synchronizeViewModel.reset() },
+                title = {
+                    Text(
+                        "Synchronization failed",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = { Text("Error: ${it.error}") },
+                confirmButton = {
+                    Button(onClick = { synchronizeViewModel.reset() }) {
+                        Text("OK")
                     }
-                )
-            }
+                }
+            )
         }
     }
 }
@@ -329,20 +321,6 @@ fun StatusRowS5Preview() {
     CarScrapTheme {
         Box(modifier = Modifier.background(Color.White), contentAlignment = Alignment.Center) {
             StatusRow(Modifier.fillMaxWidth(), RemoteData.SynchronizationStep.Completed)
-        }
-    }
-}
-
-@Preview(device = Devices.PIXEL_6A)
-@Composable
-fun SynchronizeDialogPreview() {
-    CarScrapTheme {
-        KoinApplication(application = { modules(appModule) }) {
-            Surface(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-                Box(contentAlignment = Alignment.Center) {
-                    SynchronizeBox()
-                }
-            }
         }
     }
 }
