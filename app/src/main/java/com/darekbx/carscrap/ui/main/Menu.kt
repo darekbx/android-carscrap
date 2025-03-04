@@ -1,4 +1,4 @@
-package com.darekbx.carscrap.ui
+package com.darekbx.carscrap.ui.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,9 +18,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,22 +30,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.darekbx.carscrap.R
+import com.darekbx.carscrap.navigation.ChartDestination
+import com.darekbx.carscrap.navigation.ListDestination
+import com.darekbx.carscrap.navigation.StatisticsDestination
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
 
-enum class MenuItemType(val iconResId: Int) {
-    CHART(R.drawable.ic_chart),
-    LIST(R.drawable.ic_list),
-    STATISTICS(R.drawable.ic_statistics)
+enum class MenuItemType(val iconResId: Int, val route: String) {
+    CHART(R.drawable.ic_chart, ChartDestination.route),
+    LIST(R.drawable.ic_list, ListDestination.route),
+    STATISTICS(R.drawable.ic_statistics, StatisticsDestination.route)
 }
 
 @Composable
 fun MenuRow(
     modifier: Modifier,
     rowCount: Int,
-    activeMenuItem: MenuItemType,
-    onMenuItemClick: (MenuItemType) -> Unit
+    navController: NavController
 ) {
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStack?.destination
     Row(
         modifier
             .fillMaxWidth()
@@ -53,9 +61,12 @@ fun MenuRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MenuItemType.values().forEach { item ->
-            MenuItem(item.iconResId, isActive = item == activeMenuItem) {
-                onMenuItemClick(item)
+        MenuItemType.entries.forEach { item ->
+            MenuItem(
+                item.iconResId,
+                isActive = item.route == currentDestination?.route,
+            ) {
+                navController.navigate(item.route)
             }
         }
         Spacer(Modifier.weight(1F))
@@ -105,6 +116,7 @@ private fun RowsCount(count: Int) {
 @Composable
 fun MenuRowPreview() {
     CarScrapTheme {
-        MenuRow(Modifier, 4231, MenuItemType.CHART) { }
+        val context = LocalContext.current
+        MenuRow(Modifier, 4231, NavController(context))
     }
 }

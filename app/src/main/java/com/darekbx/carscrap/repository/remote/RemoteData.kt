@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.darekbx.carscrap.BuildConfig
+import com.darekbx.carscrap.repository.SynchronizeBus
 import com.darekbx.carscrap.repository.local.dao.CarModelDao
 import com.darekbx.carscrap.repository.local.dto.CarModel
 import com.darekbx.carscrap.repository.remote.model.Car
@@ -27,6 +28,7 @@ class RemoteData(
     private val carModelDao: CarModelDao,
     private val timeProvider: TimeProvider,
     private val dateTimeFormatter: DateTimeFormatter,
+    private val synchronizeBus: SynchronizeBus,
     private val limit: Int? = null
 ) {
 
@@ -65,6 +67,7 @@ class RemoteData(
                 publishStatus(onSynchronizationStep, SynchronizationStep.StoreData)
                 storeData(cars)
 
+                synchronizeBus.publishTimestamp()
                 publishStatus(onSynchronizationStep, SynchronizationStep.Completed)
             } catch (e: Exception) {
                 Log.e(TAG, "Synchronization failed", e)
