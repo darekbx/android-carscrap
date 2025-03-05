@@ -1,6 +1,7 @@
 package com.darekbx.carscrap.ui.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.darekbx.carscrap.navigation.AppNavHost
@@ -49,7 +51,7 @@ fun MainContent(
             contentAlignment = Alignment.TopCenter
         ) {
             AppNavHost(
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier,
                 navController = navController
             )
         }

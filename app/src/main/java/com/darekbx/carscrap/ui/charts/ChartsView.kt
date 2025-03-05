@@ -2,12 +2,18 @@ package com.darekbx.carscrap.ui.charts
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,7 +65,10 @@ fun ProgressView() {
 
 @Composable
 fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
-    Box(
+    var isYearSelectorExpanded by remember { mutableStateOf(false) }
+    var selectedYear by remember { mutableStateOf<Int?>(null) }
+
+    Column(
         modifier
             .padding(8.dp)
             .background(
@@ -67,7 +76,29 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
                 MaterialTheme.shapes.medium
             )
     ) {
-        PriceChart(Modifier.fillMaxSize(), chartData/*, selectedYear = 2015*/)
+        PriceChart(
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1F),
+            chartData = chartData,
+            selectedYear = selectedYear
+        )
+
+        Button(modifier = Modifier, onClick = { isYearSelectorExpanded = true }) {
+            Text("Select year")
+        }
+    }
+
+    DropdownMenu(isYearSelectorExpanded, onDismissRequest = { isYearSelectorExpanded = false }) {
+        years.forEach { year ->
+            DropdownMenuItem(
+                text = { Text("$year") },
+                onClick = {
+                    selectedYear = year
+                    isYearSelectorExpanded = false
+                }
+            )
+        }
     }
 }
 
@@ -93,18 +124,21 @@ fun PriceChart(modifier: Modifier, chartData: List<ChartData>, selectedYear: Int
         // draw guide lines
         drawGuideLines(distinctPrices, height, minValue, heightRatio, viewSize, width, measurer)
 
-        selectedYear?.let { year ->
-            val items = chartData.first { it.year == year }.carModels
+        chartData.forEachIndexed { i, carsForYear ->
+            val items = carsForYear.carModels
             val widthRatio = width / (items.size - 1)
-            drawChart(items, widthRatio, height, minValue, heightRatio, colors[0])
-            drawCircles(items, widthRatio, height, minValue, heightRatio, bgColor, colors[0])
-        } ?: run {
-            chartData.forEachIndexed { i, carsForYear ->
-                val items = carsForYear.carModels
-                val widthRatio = width / (items.size - 1)
-                drawChart(items, widthRatio, height, minValue, heightRatio, colors[i])
-                drawCircles(items, widthRatio, height, minValue, heightRatio, bgColor, colors[i])
+
+            val color = when {
+                selectedYear == null -> colors[i]
+                selectedYear == carsForYear.year -> colors[i]
+                else -> colors[i].copy(alpha = 0.2F)
             }
+
+            val focusChart = selectedYear != null && selectedYear == carsForYear.year
+            val isYearFocused = selectedYear != null && selectedYear != carsForYear.year
+
+            drawChart(items, widthRatio, height, minValue, heightRatio, color, focusChart)
+            drawCircles(items, widthRatio, height, minValue, heightRatio, bgColor, color, isYearFocused)
         }
     }
 }
@@ -149,7 +183,8 @@ private fun DrawScope.drawChart(
     height: Float,
     minValue: Int,
     heightRatio: Float,
-    chartColor: Color
+    chartColor: Color,
+    focusChart: Boolean
 ) {
     var firstPoint = Offset(0f, height - (cars.first().price - minValue) * heightRatio)
     cars.forEachIndexed { index, carModel ->
@@ -160,7 +195,7 @@ private fun DrawScope.drawChart(
             color = chartColor,
             start = firstPoint,
             end = Offset(x, y),
-            strokeWidth = 2f
+            strokeWidth = if (focusChart) 4f else 2f
         )
 
         firstPoint = Offset(x, y)
@@ -174,16 +209,19 @@ private fun DrawScope.drawCircles(
     minValue: Int,
     heightRatio: Float,
     bgColor: Color,
-    chartColor: Color
+    chartColor: Color,
+    isYearFocused: Boolean
 ) {
     cars.forEachIndexed { index, carModel ->
         val x = index * widthRatio
         val y = height - (carModel.price - minValue) * heightRatio
-        drawCircle(
-            color = bgColor,
-            center = Offset(x, y),
-            radius = 5f,
-        )
+        if (!isYearFocused) {
+            drawCircle(
+                color = bgColor,
+                center = Offset(x, y),
+                radius = 5f,
+            )
+        }
         drawCircle(
             color = chartColor,
             center = Offset(x, y),
@@ -208,19 +246,13 @@ val colors = listOf(
     Color(0xFF9B59B6),
     Color(0xFFE74C3C),
     Color(0xFFF39C12),
-    Color(0xFFD35400),
     Color(0xFFC0392B),
     Color(0xFF8E44AD),
     Color(0xFF2980B9),
     Color(0xFF27AE60),
-    Color(0xFF16A085),
     Color(0xFFB71C1C),
-    Color(0xFF880E4F),
-    Color(0xFF4A148C),
     Color(0xFF0D47A1),
-    Color(0xFF00695C),
     Color(0xFF2E7D32),
-    Color(0xFF9E9D24),
     Color(0xFFF57F17)
 )
 

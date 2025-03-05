@@ -42,5 +42,5 @@ val appModule = module {
 
     viewModel { SynchronizeViewModel(get()) }
     viewModel { ChartsViewModel(get(), get()) }
-    viewModel { MainViewModel(get()) }
+    viewModel { MainViewModel(get(), get()) }
 }

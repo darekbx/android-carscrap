@@ -1,5 +1,11 @@
 package com.darekbx.carscrap.ui.synchronization
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +36,11 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import com.darekbx.carscrap.R
 import com.darekbx.carscrap.repository.remote.RemoteData
 import org.koin.androidx.compose.koinViewModel
@@ -41,8 +52,12 @@ private enum class ProgressStatus {
 }
 
 @Composable
-fun SynchronizeBox(modifier: Modifier, synchronizeViewModel: SynchronizeViewModel = koinViewModel()) {
+fun SynchronizeBox(
+    modifier: Modifier,
+    synchronizeViewModel: SynchronizeViewModel = koinViewModel()
+) {
     val status by synchronizeViewModel.synchronizationStep
+    val isInProgress by synchronizeViewModel.inProgress
     var lastFetchDateTime by remember { mutableStateOf<String?>(null) }
     var lastStatus by remember { mutableStateOf<RemoteData.SynchronizationStep?>(null) }
 
@@ -59,17 +74,44 @@ fun SynchronizeBox(modifier: Modifier, synchronizeViewModel: SynchronizeViewMode
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        StatusRow(Modifier.fillMaxWidth(), lastStatus)
-        Text(
-            text = lastFetchDateTime?.let { "Last sync time: $it" } ?: "Last sync: never",
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        Button(
-            modifier = Modifier.padding(bottom = 8.dp),
-            onClick = { synchronizeViewModel.synchronize() }) {
-            Text("Synchronize data")
+        AnimatedVisibility(
+            visible = isInProgress,
+            enter = fadeIn(animationSpec = tween(500, delayMillis = 250)) +
+                    expandVertically(animationSpec = tween(500, delayMillis = 250)),
+            exit = fadeOut(animationSpec = tween(250)) +
+                    shrinkVertically(animationSpec = tween(250))
+        ) {
+            StatusRow(Modifier.fillMaxWidth(), lastStatus)
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                modifier = Modifier,
+                shape = MaterialTheme.shapes.medium,
+                onClick = { synchronizeViewModel.synchronize() }) {
+                Text("Synchronize data", color = MaterialTheme.colorScheme.onSurface)
+            }
+            Text(
+                text = lastFetchDateTime?.let {
+                    buildAnnotatedString {
+                        append("Last sync time")
+                        appendLine()
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(it)
+                        }
+                    }
+                } ?: buildAnnotatedString { append("Last sync: never") },
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+            )
         }
     }
 
@@ -95,7 +137,10 @@ fun SynchronizeBox(modifier: Modifier, synchronizeViewModel: SynchronizeViewMode
 }
 
 @Composable
-private fun StatusRow(modifier: Modifier, step: RemoteData.SynchronizationStep?) {
+private fun StatusRow(
+    modifier: Modifier,
+    step: RemoteData.SynchronizationStep?
+) {
     Row(
         modifier = modifier
             .padding(16.dp),
