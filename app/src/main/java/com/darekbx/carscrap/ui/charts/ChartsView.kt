@@ -2,19 +2,26 @@ package com.darekbx.carscrap.ui.charts
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +37,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -65,8 +74,8 @@ fun ProgressView() {
 
 @Composable
 fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
-    var isYearSelectorExpanded by remember { mutableStateOf(false) }
     var selectedYear by remember { mutableStateOf<Int?>(null) }
+    var drawLines by remember { mutableStateOf(false) }
 
     Column(
         modifier
@@ -81,29 +90,82 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
                 .fillMaxSize()
                 .weight(1F),
             chartData = chartData,
-            selectedYear = selectedYear
+            selectedYear = selectedYear,
+            drawLines = drawLines
         )
 
-        Button(modifier = Modifier, onClick = { isYearSelectorExpanded = true }) {
-            Text("Select year")
-        }
-    }
+        YearSelection(years, onSelectedYear = { selectedYear = it })
 
-    DropdownMenu(isYearSelectorExpanded, onDismissRequest = { isYearSelectorExpanded = false }) {
-        years.forEach { year ->
-            DropdownMenuItem(
-                text = { Text("$year") },
-                onClick = {
-                    selectedYear = year
-                    isYearSelectorExpanded = false
-                }
+        Row(
+            modifier = Modifier.padding(top = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 38.dp) {
+                Checkbox(
+                    checked = drawLines,
+                    onCheckedChange = { drawLines = it },
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
+            Text(
+                text = "Draw lines",
+                fontSize = 15.sp,
+                modifier = Modifier
             )
         }
     }
 }
 
 @Composable
-fun PriceChart(modifier: Modifier, chartData: List<ChartData>, selectedYear: Int? = null) {
+@OptIn(ExperimentalLayoutApi::class)
+private fun YearSelection(
+    years: List<Int>,
+    onSelectedYear: (Int?) -> Unit
+) {
+    var selectedYear by remember { mutableStateOf<Int?>(null) }
+    FlowRow(Modifier.fillMaxWidth()) {
+        years.forEach { year ->
+            val decoration =
+                if (selectedYear != year) TextDecoration.Underline
+                else TextDecoration.None
+            Text(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable {
+                        onSelectedYear(year)
+                        selectedYear = year
+                    },
+                text = "$year",
+                fontSize = 15.sp,
+                fontWeight = if (selectedYear == year) FontWeight.Bold else FontWeight.Normal,
+                style = TextStyle(textDecoration = decoration)
+            )
+        }
+        val decoration =
+            if (selectedYear != null) TextDecoration.Underline
+            else TextDecoration.None
+        Text(
+            modifier = Modifier
+                .padding(8.dp)
+                .clickable {
+                    onSelectedYear(null)
+                    selectedYear = null
+                },
+            text = "All years",
+            fontSize = 15.sp,
+            fontWeight = if (selectedYear == null) FontWeight.Bold else FontWeight.Normal,
+            style = TextStyle(textDecoration = decoration)
+        )
+    }
+}
+
+@Composable
+fun PriceChart(
+    modifier: Modifier,
+    chartData: List<ChartData>,
+    selectedYear: Int? = null,
+    drawLines: Boolean = true
+) {
     val measurer = rememberTextMeasurer()
     val bgColor = MaterialTheme.colorScheme.surfaceContainer
     val allCars = chartData.flatMap { it.carModels }
@@ -119,27 +181,63 @@ fun PriceChart(modifier: Modifier, chartData: List<ChartData>, selectedYear: Int
         val rightOffset = 70F
         val height = viewSize.height.toFloat()
         val width = viewSize.width.toFloat() - rightOffset
-        val heightRatio = height / (maxValue - minValue)
+        val hRatio = height / (maxValue - minValue)
 
-        // draw guide lines
-        drawGuideLines(distinctPrices, height, minValue, heightRatio, viewSize, width, measurer)
+        drawGuideLines(distinctPrices, height, minValue, hRatio, viewSize, width, measurer)
 
         chartData.forEachIndexed { i, carsForYear ->
             val items = carsForYear.carModels
-            val widthRatio = width / (items.size - 1)
+            val wRatio = width / (items.size - 1)
 
-            val color = when {
-                selectedYear == null -> colors[i]
-                selectedYear == carsForYear.year -> colors[i]
+            val color = when (selectedYear) {
+                null -> colors[i]
+                carsForYear.year -> colors[i]
                 else -> colors[i].copy(alpha = 0.2F)
             }
 
             val focusChart = selectedYear != null && selectedYear == carsForYear.year
             val isYearFocused = selectedYear != null && selectedYear != carsForYear.year
 
-            drawChart(items, widthRatio, height, minValue, heightRatio, color, focusChart)
-            drawCircles(items, widthRatio, height, minValue, heightRatio, bgColor, color, isYearFocused)
+            if (drawLines) {
+                drawChart(items, wRatio, height, minValue, hRatio, color, focusChart)
+            }
+
+            val bgColor = if (drawLines) bgColor else color
+            drawCircles(items, wRatio, height, minValue, hRatio, bgColor, color, isYearFocused)
+
+            if (selectedYear == carsForYear.year) {
+                drawTrendLine(items, wRatio, height, minValue, hRatio, bgColor)
+            }
         }
+    }
+}
+
+private fun DrawScope.drawTrendLine(
+    items: List<CarModel>,
+    wRatio: Float,
+    height: Float,
+    minValue: Int,
+    hRatio: Float,
+    bgColor: Color
+) {
+    calculatePriceTrendLine(items).let { (start, end) ->
+        val sx = start.x * wRatio
+        val ex = end.x * wRatio
+        val sy = height - (start.y - minValue) * hRatio
+        val ey = height - (end.y - minValue) * hRatio
+
+        drawLine(
+            color = Color.White,
+            start = Offset(sx, sy),
+            end = Offset(ex, ey),
+            strokeWidth = 4f
+        )
+
+        drawCircle(bgColor, center = Offset(sx, sy), radius = 5f)
+        drawCircle(Color.White, center = Offset(sx, sy), radius = 5f, style = Stroke(width = 2f))
+
+        drawCircle(bgColor, center = Offset(ex, ey), radius = 5f)
+        drawCircle(Color.White, center = Offset(ex, ey), radius = 5f, style = Stroke(width = 2f))
     }
 }
 
@@ -229,6 +327,36 @@ private fun DrawScope.drawCircles(
             style = Stroke(width = 2f)
         )
     }
+}
+
+private fun calculatePriceTrendLine(carModels: List<CarModel>): Pair<Offset, Offset> {
+    val n = carModels.size
+    var sumX = 0.0
+    var sumY = 0.0
+    var sumXY = 0.0
+    var sumXX = 0.0
+
+    carModels.forEachIndexed { index, car ->
+        val x = index.toDouble()
+        val y = car.price.toDouble()
+
+        sumX += x
+        sumY += y
+        sumXY += x * y
+        sumXX += x * x
+    }
+
+    val slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
+    val yIntercept = (sumY - slope * sumX) / n
+    val startX = 0.0F
+    val endX = (n - 1).toFloat()
+    val startY = (slope * startX + yIntercept).toFloat()
+    val endY = (slope * endX + yIntercept).toFloat()
+
+    return Pair(
+        Offset(startX, startY),
+        Offset(endX, endY)
+    )
 }
 
 private fun getDistinctFullPrices(prices: List<Int>): Set<Int> {

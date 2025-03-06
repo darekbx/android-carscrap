@@ -50,22 +50,22 @@ class RemoteData(
             try {
                 // 1. Authenticate
                 publishStatus(onSynchronizationStep, SynchronizationStep.Authenticate)
-                //authenticate() ?: return
+                authenticate() ?: return
 
                 // 2. Read last fetch timestamp
                 val lastFetchTimestamp = lastFetchTimesamp() ?: 0L
 
                 // 3. Fetch remote ids
                 publishStatus(onSynchronizationStep, SynchronizationStep.FetchData)
-                //val cars = fetchData(lastFetchTimestamp)
+                val cars = fetchData(lastFetchTimestamp)
 
                 // 4. Save timestamp
                 publishStatus(onSynchronizationStep, SynchronizationStep.SaveTimestamp)
-                //saveFetchTimestamp()
+                saveFetchTimestamp()
 
                 // 5. Store data in local database
                 publishStatus(onSynchronizationStep, SynchronizationStep.StoreData)
-                //storeData(cars)
+                storeData(cars)
 
                 synchronizeBus.publishTimestamp()
                 publishStatus(onSynchronizationStep, SynchronizationStep.Completed)
