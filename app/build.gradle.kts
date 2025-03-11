@@ -80,6 +80,12 @@ dependencies {
     // Data store
     implementation(libs.data.store)
 
+    // OkHttp
+    implementation(libs.ok.http)
+
+    // Json
+    implementation(libs.gson)
+
     testImplementation(libs.junit)
 
     androidTestImplementation(libs.androidx.junit)

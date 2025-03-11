@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlin.time.measureTime
 
+@Deprecated("Use local scrap")
 class RemoteData(
     private val dataStore: DataStore<Preferences>,
     private val carModelDao: CarModelDao,
@@ -134,7 +135,8 @@ class RemoteData(
                 enginePower = it.enginePower,
                 year = it.year,
                 countryOrigin = it.countryOrigin,
-                mileage = it.mileage
+                mileage = it.mileage,
+                filterId = "" //
             )
         })
     }

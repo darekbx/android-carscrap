@@ -16,6 +16,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Pink80
 )
 
+
 @Composable
 fun CarScrapTheme(
     content: @Composable () -> Unit

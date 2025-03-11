@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.darekbx.carscrap.ui.charts.ChartsView
+import com.darekbx.carscrap.ui.filter.FilterView
 import com.darekbx.carscrap.ui.list.ListView
 import com.darekbx.carscrap.ui.statistics.StatisticsView
 
@@ -29,6 +30,9 @@ fun AppNavHost(
 
         composable(route = StatisticsDestination.route) {
             StatisticsView()
+        }
+        composable(route = FilterDestination.route) {
+            FilterView()
         }
     }
 }

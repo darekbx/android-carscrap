@@ -7,14 +7,14 @@ class FetchChartDataUseCase(private val carModelDao: CarModelDao) {
 
     suspend fun fetchYears(): List<Int> {
         return carModelDao
-            .fetchYears()
+            .fetchYears("cc8a015d-b871-4420-8dda-6fd146922ec6")
             .filter { ACCEPTED_YEARS.contains(it) }
             .sorted()
     }
 
     suspend fun fetchChartData(): List<ChartData> {
         return carModelDao
-            .fetch()
+            .fetch("cc8a015d-b871-4420-8dda-6fd146922ec6")
             .groupBy { it.year }
             .filterKeys { ACCEPTED_YEARS.contains(it) }
             .map { ChartData(it.key, it.value) }

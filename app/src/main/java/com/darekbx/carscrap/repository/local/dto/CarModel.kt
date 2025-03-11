@@ -17,5 +17,6 @@ data class CarModel(
     val enginePower: Int,
     val year: Int,
     val countryOrigin: String,
-    val mileage: Int
+    val mileage: Int,
+    val filterId: String
 )

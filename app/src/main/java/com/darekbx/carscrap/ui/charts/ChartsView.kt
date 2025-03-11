@@ -3,6 +3,7 @@ package com.darekbx.carscrap.ui.charts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -88,6 +87,7 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
         PriceChart(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(bottom = 8.dp)
                 .weight(1F),
             chartData = chartData,
             selectedYear = selectedYear,
@@ -97,7 +97,7 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
         YearSelection(years, onSelectedYear = { selectedYear = it })
 
         Row(
-            modifier = Modifier.padding(top = 2.dp),
+            modifier = Modifier.padding(top = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 38.dp) {
@@ -107,10 +107,13 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
                     modifier = Modifier.padding(end = 4.dp)
                 )
             }
+            Text(text = "Draw lines", fontSize = MaterialTheme.typography.bodyLarge.fontSize)
+            Spacer(modifier = Modifier.weight(1F))
             Text(
-                text = "Draw lines",
-                fontSize = 15.sp,
-                modifier = Modifier
+                text = "Filters (0)",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                modifier = Modifier.clickable { /* TODO */ },
+                style = TextStyle(textDecoration = TextDecoration.Underline)
             )
         }
     }
@@ -123,7 +126,7 @@ private fun YearSelection(
     onSelectedYear: (Int?) -> Unit
 ) {
     var selectedYear by remember { mutableStateOf<Int?>(null) }
-    FlowRow(Modifier.fillMaxWidth()) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         years.forEach { year ->
             val decoration =
                 if (selectedYear != year) TextDecoration.Underline
@@ -136,7 +139,7 @@ private fun YearSelection(
                         selectedYear = year
                     },
                 text = "$year",
-                fontSize = 15.sp,
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = if (selectedYear == year) FontWeight.Bold else FontWeight.Normal,
                 style = TextStyle(textDecoration = decoration)
             )
@@ -152,7 +155,7 @@ private fun YearSelection(
                     selectedYear = null
                 },
             text = "All years",
-            fontSize = 15.sp,
+            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
             fontWeight = if (selectedYear == null) FontWeight.Bold else FontWeight.Normal,
             style = TextStyle(textDecoration = decoration)
         )
@@ -167,7 +170,7 @@ fun PriceChart(
     drawLines: Boolean = true
 ) {
     val measurer = rememberTextMeasurer()
-    val bgColor = MaterialTheme.colorScheme.surfaceContainer
+    val circleBgColor = MaterialTheme.colorScheme.surfaceContainer
     val allCars = chartData.flatMap { it.carModels }
     val distinctPrices = getDistinctFullPrices(allCars.map { it.price })
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
@@ -202,7 +205,7 @@ fun PriceChart(
                 drawChart(items, wRatio, height, minValue, hRatio, color, focusChart)
             }
 
-            val bgColor = if (drawLines) bgColor else color
+            val bgColor = if (drawLines) circleBgColor else color
             drawCircles(items, wRatio, height, minValue, hRatio, bgColor, color, isYearFocused)
 
             if (selectedYear == carsForYear.year) {
@@ -424,4 +427,4 @@ fun ChartPreview() {
     }
 }
 
-private fun priceModel(price: Int) = CarModel("", "", 0L, "", price, "", "", "", 0, 0, "", 0)
+private fun priceModel(price: Int) = CarModel("", "", 0L, "", price, "", "", "", 0, 0, "", 0, "")

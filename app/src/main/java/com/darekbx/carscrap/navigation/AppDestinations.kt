@@ -12,6 +12,11 @@ object ChartDestination : AppDestinations {
 object ListDestination : AppDestinations {
     override val route = "list"
 }
+
 object StatisticsDestination : AppDestinations {
     override val route = "statistics"
+}
+
+object FilterDestination : AppDestinations {
+    override val route = "filter"
 }

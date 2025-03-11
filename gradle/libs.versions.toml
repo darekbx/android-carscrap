@@ -15,6 +15,8 @@ koin = "4.0.2"
 room = "2.6.1"
 gps = "4.4.2"
 dataStore = "1.1.2"
+okhttp = "4.11.0"
+gson = "2.12.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +43,8 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 data-store = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }
+ok-http = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
