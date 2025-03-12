@@ -2,6 +2,8 @@ package com.darekbx.carscrap
 
 import android.app.Application
 import com.darekbx.carscrap.di.appModule
+import com.darekbx.carscrap.di.domainModule
+import com.darekbx.carscrap.di.viewModelModule
 import com.google.firebase.FirebaseApp
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -17,7 +19,7 @@ class CarScrapApplication: Application() {
         startKoin {
             androidLogger()
             androidContext(this@CarScrapApplication)
-            modules(appModule)
+            modules(appModule, domainModule, viewModelModule)
         }
     }
 }

@@ -8,6 +8,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.darekbx.carscrap.domain.DataCountUseCase
 import com.darekbx.carscrap.domain.FetchChartDataUseCase
+import com.darekbx.carscrap.domain.FetchFiltersUseCase
+import com.darekbx.carscrap.domain.SaveFilterUseCase
 import com.darekbx.carscrap.repository.SynchronizeBus
 import com.darekbx.carscrap.repository.local.CacheDatabase
 import com.darekbx.carscrap.repository.local.dao.CarModelDao
@@ -51,14 +53,21 @@ val appModule = module {
     factory { RemoteData(get(), get(), get(), get(), get(), /*, limit = 25*/) }
 
     factory { OkHttpClient() }
-    factory { FetchChartDataUseCase(get()) }
-    factory { DataCountUseCase(get()) }
     factory { FilterVerification(get(), get()) }
     factory { ModelGenerations(get(), get()) }
     factory { FilterFetch(get(), get(), get(), get()) }
+}
 
+val viewModelModule = module {
     viewModel { SynchronizeViewModel(get()) }
     viewModel { ChartsViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
-    viewModel { FilterViewModel(get(), get(), get()) }
+    viewModel { FilterViewModel(get(), get(), get(), get(), get()) }
+}
+
+val domainModule = module {
+    factory { FetchChartDataUseCase(get()) }
+    factory { DataCountUseCase(get()) }
+    factory { SaveFilterUseCase(get()) }
+    factory { FetchFiltersUseCase(get()) }
 }

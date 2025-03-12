@@ -49,13 +49,13 @@ import com.darekbx.carscrap.ui.theme.CarScrapTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun ChartsView(chartsViewModel: ChartsViewModel = koinViewModel()) {
+fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinViewModel()) {
     val years by chartsViewModel.years
     val chartData by chartsViewModel.chartData
 
     LaunchedEffect(Unit) {
-        chartsViewModel.fetchYears()
-        chartsViewModel.fetchChartData()
+        chartsViewModel.fetchYears(filterId)
+        chartsViewModel.fetchChartData(filterId)
     }
 
     when {
@@ -107,10 +107,15 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
                     modifier = Modifier.padding(end = 4.dp)
                 )
             }
-            Text(text = "Draw lines", fontSize = MaterialTheme.typography.bodyLarge.fontSize)
+            Text(
+                text = "Draw lines",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
             Spacer(modifier = Modifier.weight(1F))
             Text(
                 text = "Filters (0)",
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 modifier = Modifier.clickable { /* TODO */ },
                 style = TextStyle(textDecoration = TextDecoration.Underline)
@@ -139,6 +144,7 @@ private fun YearSelection(
                         selectedYear = year
                     },
                 text = "$year",
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = if (selectedYear == year) FontWeight.Bold else FontWeight.Normal,
                 style = TextStyle(textDecoration = decoration)
@@ -155,6 +161,7 @@ private fun YearSelection(
                     selectedYear = null
                 },
             text = "All years",
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
             fontWeight = if (selectedYear == null) FontWeight.Bold else FontWeight.Normal,
             style = TextStyle(textDecoration = decoration)

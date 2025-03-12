@@ -7,7 +7,6 @@ import java.util.UUID
 @Entity(tableName = "filter")
 class Filter(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val name: String,
     val make: String,
     val model: String,
     val generation: String,

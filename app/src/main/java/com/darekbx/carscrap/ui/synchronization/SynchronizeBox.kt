@@ -95,7 +95,7 @@ fun SynchronizeBox(
                 modifier = Modifier,
                 shape = MaterialTheme.shapes.medium,
                 onClick = { synchronizeViewModel.synchronize() }) {
-                Text("Synchronize data", color = MaterialTheme.colorScheme.onSurface)
+                Text("Synchronize data", color = MaterialTheme.colorScheme.secondary)
             }
             Text(
                 text = lastFetchDateTime?.let {
@@ -107,7 +107,7 @@ fun SynchronizeBox(
                         }
                     }
                 } ?: buildAnnotatedString { append("Last sync: never") },
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -122,7 +122,7 @@ fun SynchronizeBox(
                 title = {
                     Text(
                         "Synchronization failed",
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 },
                 text = { Text("Error: ${it.error}") },

@@ -88,8 +88,7 @@ class FilterFetch(
         val jsonRequest = gson.toJson(requestData)
         val mediaType = "application/json".toMediaTypeOrNull()
         val requestBody = jsonRequest.toRequestBody(mediaType)
-        val request =
-            Request.Builder().url(Common.url).apply { addHeaders() }.post(requestBody).build()
+        val request = Request.Builder().url(Common.url).apply { addHeaders() }.post(requestBody).build()
         return request
     }
 

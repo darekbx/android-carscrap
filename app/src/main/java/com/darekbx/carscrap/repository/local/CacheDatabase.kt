@@ -26,7 +26,6 @@ abstract class CacheDatabase : RoomDatabase() {
                     """
             CREATE TABLE filter (
                 id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
                 make TEXT NOT NULL,
                 model TEXT NOT NULL,
                 generation TEXT NOT NULL,

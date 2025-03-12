@@ -5,24 +5,24 @@ import com.darekbx.carscrap.repository.local.dto.CarModel
 
 class FetchChartDataUseCase(private val carModelDao: CarModelDao) {
 
-    suspend fun fetchYears(): List<Int> {
+    suspend fun fetchYears(filterId: String): List<Int> {
         return carModelDao
-            .fetchYears("cc8a015d-b871-4420-8dda-6fd146922ec6")
-            .filter { ACCEPTED_YEARS.contains(it) }
+            .fetchYears(filterId, MIN_ITEMS_COUNT)
+            .map { it.year }
             .sorted()
     }
 
-    suspend fun fetchChartData(): List<ChartData> {
+    suspend fun fetchChartData(filterId: String): List<ChartData> {
         return carModelDao
-            .fetch("cc8a015d-b871-4420-8dda-6fd146922ec6")
+            .fetch(filterId)
             .groupBy { it.year }
-            .filterKeys { ACCEPTED_YEARS.contains(it) }
+            .filterValues { it.size >= MIN_ITEMS_COUNT }
             .map { ChartData(it.key, it.value) }
             .sortedBy { it.year }
     }
 
     companion object {
-        val ACCEPTED_YEARS = (2012..2024)
+        val MIN_ITEMS_COUNT = 5
     }
 }
 

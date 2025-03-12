@@ -34,7 +34,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.darekbx.carscrap.R
 import com.darekbx.carscrap.navigation.ChartDestination
-import com.darekbx.carscrap.navigation.FilterDestination
+import com.darekbx.carscrap.navigation.FiltersDestination
 import com.darekbx.carscrap.navigation.ListDestination
 import com.darekbx.carscrap.navigation.StatisticsDestination
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
@@ -43,8 +43,7 @@ enum class MenuItemType(val iconResId: Int, val route: String) {
     CHART(R.drawable.ic_chart, ChartDestination.route),
     LIST(R.drawable.ic_list, ListDestination.route),
     STATISTICS(R.drawable.ic_statistics, StatisticsDestination.route),
-
-    FILTER(R.drawable.ic_filter, FilterDestination.route),
+    FILTER(R.drawable.ic_filter, FiltersDestination.route),
 }
 
 @Composable
@@ -110,7 +109,7 @@ private fun RowsCount(count: Int) {
             }
         },
         style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurface,
+        color = MaterialTheme.colorScheme.secondary,
         modifier = Modifier.padding(8.dp)
     )
 }

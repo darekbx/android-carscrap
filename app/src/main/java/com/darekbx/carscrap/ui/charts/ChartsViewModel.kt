@@ -28,34 +28,35 @@ class ChartsViewModel(
         get() = _chartData
 
     init {
-        listenForChanges()
+        // TODO
+        //listenForChanges()
     }
 
-    private fun listenForChanges() {
+    private fun listenForChanges(filterId: String) {
         viewModelScope.launch {
             synchronizeBus.listenForTimestamps().collect {
                 _chartData.value = emptyList()
                 delay(500) // Just for better UX
                 withContext(Dispatchers.IO) {
                     // Refresh
-                    _chartData.value = fetchChartDataUseCase.fetchChartData()
+                    _chartData.value = fetchChartDataUseCase.fetchChartData(filterId)
                 }
             }
         }
     }
 
-    fun fetchYears() {
+    fun fetchYears(filterId: String) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _years.value = fetchChartDataUseCase.fetchYears()
+                _years.value = fetchChartDataUseCase.fetchYears(filterId)
             }
         }
     }
 
-    fun fetchChartData() {
+    fun fetchChartData(filterId: String) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _chartData.value = fetchChartDataUseCase.fetchChartData()
+                _chartData.value = fetchChartDataUseCase.fetchChartData(filterId)
             }
         }
     }
