@@ -30,4 +30,7 @@ interface CarModelDao {
 
     @Query("DELETE FROM car_model WHERE filterId = :filterId")
     suspend fun deleteAll(filterId: String = "")
+
+    @Query("UPDATE car_model SET filterId = :newFilterId WHERE filterId = :oldFilterId")
+    suspend fun updateFilterId(newFilterId: String, oldFilterId: String)
 }

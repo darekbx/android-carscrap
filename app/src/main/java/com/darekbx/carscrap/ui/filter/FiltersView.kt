@@ -1,5 +1,7 @@
 package com.darekbx.carscrap.ui.filter
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,10 +35,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.text.capitalize
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Popup
 import com.darekbx.carscrap.repository.local.dto.Filter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 @Composable
@@ -44,15 +56,40 @@ fun FiltersView(
     onFilterSelected: (String) -> Unit,
     onAddNewFilter: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val filters by filterViewModel.filters
     val inProgress by filterViewModel.inProgress
+    var refreshFilterId by remember { mutableStateOf<String?>(null) }
+    var progress = remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(Unit) {
         filterViewModel.fetchFilters()
     }
 
+    LaunchedEffect(refreshFilterId) {
+        refreshFilterId?.let { filterId ->
+            filterViewModel.scrap(
+                filterId,
+                onProgress = { currentOffset, totalCount ->
+                    progress.value = currentOffset.toFloat() / totalCount.toFloat()
+                },
+                onCompleted = { addedCount ->
+                    refreshFilterId = null
+                    scope.launch {
+                        withContext(Dispatchers.Main) {
+                            Toast
+                                .makeText(context, "Added $addedCount new cars", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            )
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        if (inProgress) {
+        if (inProgress && refreshFilterId == null) {
             ProgressBox()
         } else {
             filters?.let { filtersList ->
@@ -60,10 +97,10 @@ fun FiltersView(
                     items(filtersList) { filter ->
                         FilterItem(
                             filter = filter,
-                            onClick = { filterId -> onFilterSelected(filterId) }
+                            onClick = { filterId -> onFilterSelected(filterId) },
+                            onRefresh = { refreshFilterId = filter.id }
                         )
                     }
-                    item { MazdaFilter { onFilterSelected("") } }
                     item { AddNewButton { onAddNewFilter() } }
                 }
             } ?: run {
@@ -73,21 +110,34 @@ fun FiltersView(
             }
         }
     }
+
+    refreshFilterId?.let { filterId ->
+        ProgressBox(progress)
+    }
 }
 
 @Composable
-private fun ProgressBox() {
+private fun ProgressBox(progress: MutableState<Float>? = null) {
     Popup {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background.copy(alpha = 0.4f))
         ) {
-            CircularProgressIndicator(
-                Modifier
-                    .align(Alignment.Center)
-                    .size(48.dp)
-            )
+            progress?.let {
+                CircularProgressIndicator(
+                    progress = { it.value },
+                    Modifier
+                        .align(Alignment.Center)
+                        .size(48.dp)
+                )
+            } ?: run {
+                CircularProgressIndicator(
+                    Modifier
+                        .align(Alignment.Center)
+                        .size(48.dp)
+                )
+            }
         }
     }
 }
@@ -124,35 +174,10 @@ private fun AddNewButton(onClick: () -> Unit = { }) {
 }
 
 @Composable
-private fun MazdaFilter(onClick: () -> Unit = { }) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Mazda 6 (Firebase)",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-    }
-}
-
-@Composable
 private fun FilterItem(
     filter: Filter,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
+    onRefresh: () -> Unit = { }
 ) {
     Card(
         modifier = Modifier
@@ -200,17 +225,14 @@ private fun FilterItem(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Refresh",
                 modifier = Modifier
-            ) {
-                Text(text = "Salvage ", style = MaterialTheme.typography.bodyMedium)
-                Checkbox(
-                    checked = filter.salvage,
-                    onCheckedChange = null, // Read-only checkbox
-                    enabled = false
-                )
-            }
+                    .size(48.dp)
+                    .padding(8.dp)
+                    .clickable { onRefresh() }
+            )
         }
     }
 }

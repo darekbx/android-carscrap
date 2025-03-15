@@ -20,33 +20,4 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun StatisticsView(filterId: String = "", todo: FilterViewModel = koinViewModel()) {
 
-    val inProgress by todo.inProgress
-
-    Button(onClick = {
-        todo.scrap(filterId)
-    } ) {
-        Text("Fetch filter ${filterId}")
-    }
-
-    if (inProgress) {
-        ProgressBox()
-    }
-}
-
-// TODO move to common
-@Composable
-private fun ProgressBox() {
-    Popup {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.4f))
-        ) {
-            CircularProgressIndicator(
-                Modifier
-                    .align(Alignment.Center)
-                    .size(48.dp)
-            )
-        }
-    }
 }

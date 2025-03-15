@@ -21,7 +21,11 @@ class FilterFetch(
     private val carModelDao: CarModelDao,
     private val filterDao: FilterDao
 ) {
-    suspend fun fetch(filterId: String) {
+    suspend fun fetch(
+        filterId: String,
+        onProgress: (Int, Int) -> Unit = { _, _ -> },
+        onCompleted: (Int) -> Unit = { }
+    ) {
         val filter = filterDao.getFilter(filterId)
         val requestData = FilterRequest().apply {
             setFilterValues(filter.make, filter.model, filter.generation, filter.salvage)
@@ -31,7 +35,8 @@ class FilterFetch(
 
         Log.d(TAG, "Fetching data for filterId: $filterId, existing ids count: ${externalIds.size}")
 
-        suspendCancellableCoroutine<Unit> { continuation ->
+        suspendCancellableCoroutine { continuation ->
+            var addedCount = 0
             while (true) {
                 Log.d(TAG, "Fetch page: $page")
                 requestData.variables.page = page
@@ -60,6 +65,7 @@ class FilterFetch(
                         null
                     } else {
                         insertCount++
+                        addedCount++
                         mapToCarModel(
                             filterId = filterId,
                             nodeId = it.node.id,
@@ -71,6 +77,7 @@ class FilterFetch(
                     }
                 })
 
+                onProgress(currentOffset, totalCount)
                 page += 1
 
                 Log.d(TAG, "Page fetched, added $insertCount rows")
@@ -81,6 +88,9 @@ class FilterFetch(
             }
 
             Log.d(TAG, "Fetch done!")
+
+            continuation.resumeWith(Result.success(Unit))
+            onCompleted(addedCount)
         }
     }
 
@@ -88,7 +98,8 @@ class FilterFetch(
         val jsonRequest = gson.toJson(requestData)
         val mediaType = "application/json".toMediaTypeOrNull()
         val requestBody = jsonRequest.toRequestBody(mediaType)
-        val request = Request.Builder().url(Common.url).apply { addHeaders() }.post(requestBody).build()
+        val request =
+            Request.Builder().url(Common.url).apply { addHeaders() }.post(requestBody).build()
         return request
     }
 

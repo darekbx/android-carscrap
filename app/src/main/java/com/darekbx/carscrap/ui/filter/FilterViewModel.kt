@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
 import com.darekbx.carscrap.domain.SaveFilterUseCase
+import com.darekbx.carscrap.repository.local.dao.CarModelDao
 import com.darekbx.carscrap.repository.local.dto.Filter
 import com.darekbx.carscrap.repository.remote.scrap.FilterFetch
 import com.darekbx.carscrap.repository.remote.scrap.FilterVerification
@@ -21,7 +22,8 @@ class FilterViewModel(
     private val modelGenerations: ModelGenerations,
     private val filterFetch: FilterFetch,
     private val saveFilterUseCase: SaveFilterUseCase,
-    private val fetchFiltersUseCase: FetchFiltersUseCase
+    private val fetchFiltersUseCase: FetchFiltersUseCase,
+    private val carModelDao: CarModelDao
 ) : ViewModel() {
 
     private val _generations = mutableStateOf<List<Link>?>(null)
@@ -41,11 +43,11 @@ class FilterViewModel(
     val filters: State<List<Filter>?>
         get() = _filters
 
-    fun scrap(filterId: String) {
+    fun scrap(filterId: String, onProgress: (Int, Int) -> Unit, onCompleted: (Int) -> Unit) {
         viewModelScope.launch {
             _inProgress.value = true
             withContext(Dispatchers.IO) {
-                filterFetch.fetch(filterId)
+                filterFetch.fetch(filterId, onProgress, onCompleted)
                 _inProgress.value = false
             }
         }
@@ -84,6 +86,14 @@ class FilterViewModel(
                     _wasVerfied.value = false
                 }
                 _inProgress.value = false
+            }
+        }
+    }
+
+    fun updateFilterId(newFilterId: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                carModelDao.updateFilterId(newFilterId, "")
             }
         }
     }

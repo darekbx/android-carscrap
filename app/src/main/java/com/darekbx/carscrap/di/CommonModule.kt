@@ -62,7 +62,7 @@ val viewModelModule = module {
     viewModel { SynchronizeViewModel(get()) }
     viewModel { ChartsViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
-    viewModel { FilterViewModel(get(), get(), get(), get(), get()) }
+    viewModel { FilterViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val domainModule = module {
