@@ -4,7 +4,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 
 data class Car(
-    val externalId: Int,
+    val externalId: String,
     val createdAt: Timestamp,
     val url: String,
     val price: Int,
@@ -20,7 +20,7 @@ data class Car(
     companion object {
         fun DocumentSnapshot.toCar(): Car {
             return Car(
-                externalId = getIntOrZero("externalId"),
+                externalId = getStringOrEmpty("externalId"),
                 createdAt = getTimestamp("createdAt")!!,
                 url = getStringOrEmpty("url"),
                 price = getIntOrZero("price"),
@@ -37,7 +37,11 @@ data class Car(
 }
 
 fun DocumentSnapshot.getStringOrEmpty(field: String): String {
-    return getString(field) ?: ""
+    if (get(field) is String) {
+        return getString(field) ?: ""
+    } else {
+        return get(field).toString()
+    }
 }
 
 fun DocumentSnapshot.getIntOrZero(field: String): Int {

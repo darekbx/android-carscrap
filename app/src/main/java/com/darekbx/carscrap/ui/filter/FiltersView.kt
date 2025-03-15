@@ -27,7 +27,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,7 +45,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.window.Popup
 import com.darekbx.carscrap.repository.local.dto.Filter
 import kotlinx.coroutines.Dispatchers
@@ -60,10 +66,12 @@ fun FiltersView(
     val context = LocalContext.current
     val filters by filterViewModel.filters
     val inProgress by filterViewModel.inProgress
+    val refresh by filterViewModel.refresh
     var refreshFilterId by remember { mutableStateOf<String?>(null) }
+    var deleteFilterId by remember { mutableStateOf<String?>(null) }
     var progress = remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refresh) {
         filterViewModel.fetchFilters()
     }
 
@@ -98,7 +106,8 @@ fun FiltersView(
                         FilterItem(
                             filter = filter,
                             onClick = { filterId -> onFilterSelected(filterId) },
-                            onRefresh = { refreshFilterId = filter.id }
+                            onRefresh = { refreshFilterId = filter.id },
+                            onDelete = { deleteFilterId = filter.id }
                         )
                     }
                     item { AddNewButton { onAddNewFilter() } }
@@ -113,6 +122,17 @@ fun FiltersView(
 
     refreshFilterId?.let { filterId ->
         ProgressBox(progress)
+    }
+
+    deleteFilterId?.let { filterId ->
+        DeleteConfirmationDialog(
+            message = "Are you sure you want to delete \"filterId\" filter data?",
+            onDismiss = { deleteFilterId = null },
+            onConfirm = {
+                deleteFilterId?.let { filterId -> filterViewModel.deleteFilterData(filterId) }
+                deleteFilterId = null
+            }
+        )
     }
 }
 
@@ -177,7 +197,8 @@ private fun AddNewButton(onClick: () -> Unit = { }) {
 private fun FilterItem(
     filter: Filter,
     onClick: (String) -> Unit,
-    onRefresh: () -> Unit = { }
+    onRefresh: () -> Unit = { },
+    onDelete: () -> Unit = { }
 ) {
     Card(
         modifier = Modifier
@@ -223,8 +244,26 @@ private fun FilterItem(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Light
                 )
+                Text(
+                    text = buildAnnotatedString {
+                            append("Items count: ")
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(filter.itemsCount.toString())
+                        }
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Light
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(8.dp)
+                    .clickable { onDelete() }
+            )
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = "Refresh",
@@ -235,6 +274,28 @@ private fun FilterItem(
             )
         }
     }
+}
+
+@Composable
+fun DeleteConfirmationDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(message) },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)

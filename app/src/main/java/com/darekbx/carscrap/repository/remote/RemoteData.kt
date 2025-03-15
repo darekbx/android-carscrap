@@ -125,7 +125,7 @@ class RemoteData(
         Log.v(TAG, "Start storing data")
         carModelDao.insertAll(cars.map {
             CarModel(
-                externalId = "${it.externalId}",
+                externalId = it.externalId,
                 createdAt = it.createdAt.seconds * 1000L,
                 url = it.url,
                 price = it.price,

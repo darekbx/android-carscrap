@@ -29,7 +29,10 @@ interface CarModelDao {
     fun insertAllSync(carModels: List<CarModel>)
 
     @Query("DELETE FROM car_model WHERE filterId = :filterId")
-    suspend fun deleteAll(filterId: String = "")
+    suspend fun deleteAll(filterId: String = ""): Int
+
+    @Query("DELETE FROM car_model WHERE externalId = 0")
+    suspend fun deleteSpecial(): Int
 
     @Query("UPDATE car_model SET filterId = :newFilterId WHERE filterId = :oldFilterId")
     suspend fun updateFilterId(newFilterId: String, oldFilterId: String)

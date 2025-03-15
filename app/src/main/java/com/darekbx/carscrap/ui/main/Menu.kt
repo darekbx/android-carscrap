@@ -66,7 +66,7 @@ fun MenuRow(
         MenuItemType.entries.forEach { item ->
             MenuItem(
                 item.iconResId,
-                isActive = item.route == currentDestination?.route,
+                isActive = currentDestination?.route?.startsWith(item.route) ?: false,
             ) {
                 navController.navigate(item.route)
             }

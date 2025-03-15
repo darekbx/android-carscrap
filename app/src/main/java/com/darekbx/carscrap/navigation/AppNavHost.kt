@@ -60,7 +60,9 @@ fun AppNavHost(
         }
 
         composable(route = AddFilterDestination.route) {
-            FilterView()
+            FilterView {
+                navController.popBackStack()
+            }
         }
     }
 }

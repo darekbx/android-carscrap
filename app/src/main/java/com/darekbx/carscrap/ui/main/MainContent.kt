@@ -26,9 +26,10 @@ fun MainContent(
     mainViewModel: MainViewModel = koinViewModel()
 ) {
     val count by mainViewModel.count
+    val firebaseSynchronization = false
 
     LaunchedEffect(Unit) {
-        mainViewModel.fetchCount()
+        mainViewModel.fetchCount(filterId = "")
     }
 
     Column(
@@ -54,11 +55,13 @@ fun MainContent(
             )
         }
 
-        SynchronizeBox(
-            Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-        )
+        if (firebaseSynchronization) {
+            SynchronizeBox(
+                Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+            )
+        }
 
         MenuRow(
             modifier = Modifier

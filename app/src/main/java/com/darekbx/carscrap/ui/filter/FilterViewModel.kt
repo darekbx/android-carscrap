@@ -1,5 +1,6 @@
 package com.darekbx.carscrap.ui.filter
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -30,6 +31,7 @@ class FilterViewModel(
     private val _inProgress = mutableStateOf(false)
     private val _wasVerfied = mutableStateOf<Boolean?>(null)
     private val _filters = mutableStateOf<List<Filter>?>(null)
+    private val _refresh = mutableStateOf(false)
 
     val generations: State<List<Link>?>
         get() = _generations
@@ -43,12 +45,16 @@ class FilterViewModel(
     val filters: State<List<Filter>?>
         get() = _filters
 
+    val refresh: State<Boolean>
+        get() = _refresh
+
     fun scrap(filterId: String, onProgress: (Int, Int) -> Unit, onCompleted: (Int) -> Unit) {
         viewModelScope.launch {
             _inProgress.value = true
             withContext(Dispatchers.IO) {
                 filterFetch.fetch(filterId, onProgress, onCompleted)
                 _inProgress.value = false
+                _refresh.value = !_refresh.value
             }
         }
     }
@@ -57,19 +63,30 @@ class FilterViewModel(
         viewModelScope.launch {
             _inProgress.value = true
             withContext(Dispatchers.IO) {
-                _filters.value = fetchFiltersUseCase.fetchFilters()
+                _filters.value = fetchFiltersUseCase.fetchFilters().map { filter ->
+                    filter.also {
+                        filter.itemsCount = carModelDao.countData(filter.id)
+                    }
+                }
                 _inProgress.value = false
             }
         }
     }
 
-    fun saveFilter(make: String, model: String, generation: String, salvage: Boolean) {
+    fun saveFilter(
+        make: String,
+        model: String,
+        generation: String,
+        salvage: Boolean,
+        onCompleted: () -> Unit = { }
+    ) {
         viewModelScope.launch {
             _inProgress.value = true
             withContext(Dispatchers.IO) {
                 saveFilterUseCase.saveFilter(make, model, generation, salvage)
                 delay(500) // For better UX
                 _inProgress.value = false
+                onCompleted()
             }
         }
     }
@@ -78,7 +95,7 @@ class FilterViewModel(
         viewModelScope.launch {
             _inProgress.value = true
             withContext(Dispatchers.IO) {
-                val result  = filterVerification.verify(make, model)
+                val result = filterVerification.verify(make, model)
                 if (result) {
                     _generations.value = modelGenerations.fetchGenerations(make, model)
                     _wasVerfied.value = true
@@ -94,6 +111,16 @@ class FilterViewModel(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 carModelDao.updateFilterId(newFilterId, "")
+            }
+        }
+    }
+
+    fun deleteFilterData(filterId: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val count = carModelDao.deleteAll(filterId)
+                Log.v("FilterViewModel", "Deleted $count items")
+                _refresh.value = !_refresh.value
             }
         }
     }

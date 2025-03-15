@@ -40,7 +40,7 @@ import androidx.compose.ui.window.Popup
 import com.darekbx.carscrap.repository.remote.scrap.Link
 
 @Composable
-fun FilterView(filterViewModel: FilterViewModel = koinViewModel()) {
+fun FilterView(filterViewModel: FilterViewModel = koinViewModel(), onBack: () -> Unit = { }) {
 
     val generations by filterViewModel.generations
     val inProgress by filterViewModel.inProgress
@@ -117,7 +117,11 @@ fun FilterView(filterViewModel: FilterViewModel = koinViewModel()) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-            onClick = { filterViewModel.saveFilter(carMake, carModel, generation, salvaged) }
+            onClick = {
+                filterViewModel.saveFilter(carMake, carModel, generation, salvaged) {
+                    onBack()
+                }
+            }
         ) {
             Text("Save filter")
         }
