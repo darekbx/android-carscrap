@@ -21,24 +21,24 @@ class MainViewModel(
         get() = _count
 
     init {
-        listenForChanges(filterId = "")
+        listenForChanges()
     }
 
-    private fun listenForChanges(filterId: String) {
+    private fun listenForChanges() {
         viewModelScope.launch {
             synchronizeBus.listenForTimestamps().collect {
                 withContext(Dispatchers.IO) {
                     // Refresh
-                    _count.value = countUseCase.countData(filterId)
+                    _count.value = countUseCase.countData()
                 }
             }
         }
     }
 
-    fun fetchCount(filterId: String) {
+    fun fetchCount() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _count.value = countUseCase.countData(filterId)
+                _count.value = countUseCase.countData()
             }
         }
     }

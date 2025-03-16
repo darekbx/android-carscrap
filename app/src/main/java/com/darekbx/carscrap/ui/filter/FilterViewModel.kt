@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
 import com.darekbx.carscrap.domain.SaveFilterUseCase
 import com.darekbx.carscrap.repository.local.dao.CarModelDao
+import com.darekbx.carscrap.repository.local.dao.FilterDao
 import com.darekbx.carscrap.repository.local.dto.Filter
 import com.darekbx.carscrap.repository.remote.scrap.FilterFetch
 import com.darekbx.carscrap.repository.remote.scrap.FilterVerification
@@ -24,7 +25,8 @@ class FilterViewModel(
     private val filterFetch: FilterFetch,
     private val saveFilterUseCase: SaveFilterUseCase,
     private val fetchFiltersUseCase: FetchFiltersUseCase,
-    private val carModelDao: CarModelDao
+    private val carModelDao: CarModelDao,
+    private val filterDao: FilterDao
 ) : ViewModel() {
 
     private val _generations = mutableStateOf<List<Link>?>(null)
@@ -120,6 +122,15 @@ class FilterViewModel(
             withContext(Dispatchers.IO) {
                 val count = carModelDao.deleteAll(filterId)
                 Log.v("FilterViewModel", "Deleted $count items")
+                _refresh.value = !_refresh.value
+            }
+        }
+    }
+
+    fun deleteFilter(filterId: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                filterDao.deleteFilter(filterId)
                 _refresh.value = !_refresh.value
             }
         }

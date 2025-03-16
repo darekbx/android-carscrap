@@ -1,6 +1,5 @@
 package com.darekbx.carscrap.ui.filter
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,7 +66,7 @@ fun FiltersView(
     val inProgress by filterViewModel.inProgress
     val refresh by filterViewModel.refresh
     var refreshFilterId by remember { mutableStateOf<String?>(null) }
-    var deleteFilterId by remember { mutableStateOf<String?>(null) }
+    var deleteFilter by remember { mutableStateOf<Filter?>(null) }
     var progress = remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(refresh) {
@@ -107,7 +105,7 @@ fun FiltersView(
                             filter = filter,
                             onClick = { filterId -> onFilterSelected(filterId) },
                             onRefresh = { refreshFilterId = filter.id },
-                            onDelete = { deleteFilterId = filter.id }
+                            onDelete = { deleteFilter = filter }
                         )
                     }
                     item { AddNewButton { onAddNewFilter() } }
@@ -124,15 +122,26 @@ fun FiltersView(
         ProgressBox(progress)
     }
 
-    deleteFilterId?.let { filterId ->
-        DeleteConfirmationDialog(
-            message = "Are you sure you want to delete \"filterId\" filter data?",
-            onDismiss = { deleteFilterId = null },
-            onConfirm = {
-                deleteFilterId?.let { filterId -> filterViewModel.deleteFilterData(filterId) }
-                deleteFilterId = null
-            }
-        )
+    deleteFilter?.let { filter ->
+        if (filter.itemsCount > 0) {
+            DeleteConfirmationDialog(
+                message = "Are you sure you want to delete \"${filter.make} ${filter.model}\" filter data?",
+                onDismiss = { deleteFilter = null },
+                onConfirm = {
+                    filterViewModel.deleteFilterData(filter.id)
+                    deleteFilter = null
+                }
+            )
+        } else {
+            DeleteConfirmationDialog(
+                message = "Are you sure you want to delete \"${filter.make} ${filter.model}\" filter?",
+                onDismiss = { deleteFilter = null },
+                onConfirm = {
+                    filterViewModel.deleteFilter(filter.id)
+                    deleteFilter = null
+                }
+            )
+        }
     }
 }
 
@@ -246,7 +255,7 @@ private fun FilterItem(
                 )
                 Text(
                     text = buildAnnotatedString {
-                            append("Items count: ")
+                        append("Items count: ")
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                             append(filter.itemsCount.toString())
                         }

@@ -13,6 +13,9 @@ interface CarModelDao {
     @Query("SELECT COUNT(*) FROM car_model WHERE filterId = :filterId")
     suspend fun countData(filterId: String = ""): Int
 
+    @Query("SELECT COUNT(*) FROM car_model")
+    suspend fun countData(): Int
+
     @Query("SELECT year, COUNT(*) AS row_count FROM car_model WHERE filterId = :filterId GROUP BY year HAVING COUNT(*) > :minItemsCount")
     suspend fun fetchYears(filterId: String = "", minItemsCount: Int): List<YearCount>
 

@@ -25,9 +25,11 @@ import com.darekbx.carscrap.ui.filter.FilterViewModel
 import com.darekbx.carscrap.ui.main.MainViewModel
 import com.darekbx.carscrap.ui.synchronization.SynchronizeViewModel
 import com.darekbx.carscrap.utils.DateTimeFormatter
+import com.darekbx.carscrap.worker.KoinWorkerFactory
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -56,13 +58,15 @@ val appModule = module {
     factory { FilterVerification(get(), get()) }
     factory { ModelGenerations(get(), get()) }
     factory { FilterFetch(get(), get(), get(), get()) }
+
+    single { KoinWorkerFactory(get(), get()) }
 }
 
 val viewModelModule = module {
     viewModel { SynchronizeViewModel(get()) }
     viewModel { ChartsViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
-    viewModel { FilterViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FilterViewModel(get(), get(), get(), get(), get(), get(), get()) }
 }
 
 val domainModule = module {

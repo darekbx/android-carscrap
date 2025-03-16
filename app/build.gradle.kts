@@ -66,6 +66,7 @@ dependencies {
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.androidx.workmanager)
 
     // Room
     implementation(libs.androidx.room.runtime)
@@ -85,6 +86,9 @@ dependencies {
 
     // Json
     implementation(libs.gson)
+
+    // Work
+    implementation(libs.work)
 
     testImplementation(libs.junit)
 

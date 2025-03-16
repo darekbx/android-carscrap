@@ -29,7 +29,7 @@ fun MainContent(
     val firebaseSynchronization = false
 
     LaunchedEffect(Unit) {
-        mainViewModel.fetchCount(filterId = "")
+        mainViewModel.fetchCount()
     }
 
     Column(
