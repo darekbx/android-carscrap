@@ -43,8 +43,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import com.darekbx.carscrap.domain.ChartData
 import com.darekbx.carscrap.repository.local.dto.CarModel
+import com.darekbx.carscrap.repository.local.dto.Filter
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -52,6 +54,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinViewModel()) {
     val years by chartsViewModel.years
     val chartData by chartsViewModel.chartData
+    var openFiltering by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         chartsViewModel.fetchYears(filterId)
@@ -59,8 +62,17 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
     }
 
     when {
-        chartData.isNotEmpty() -> Chart(Modifier.fillMaxSize(), years, chartData)
+        chartData.isNotEmpty() -> Chart(Modifier.fillMaxSize(), years, chartData) {
+            openFiltering = true
+        }
+
         else -> ProgressView()
+    }
+
+    if (openFiltering) {
+        Popup {
+            FilteringView()
+        }
     }
 }
 
@@ -72,7 +84,12 @@ fun ProgressView() {
 }
 
 @Composable
-fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
+fun Chart(
+    modifier: Modifier,
+    years: List<Int>,
+    chartData: List<ChartData>,
+    openFilters: () -> Unit = { }
+) {
     var selectedYear by remember { mutableStateOf<Int?>(null) }
     var drawLines by remember { mutableStateOf(false) }
 
@@ -117,7 +134,7 @@ fun Chart(modifier: Modifier, years: List<Int>, chartData: List<ChartData>) {
                 text = "Filters (0)",
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                modifier = Modifier.clickable { /* TODO */ },
+                modifier = Modifier.clickable { openFilters() },
                 style = TextStyle(textDecoration = TextDecoration.Underline)
             )
         }
