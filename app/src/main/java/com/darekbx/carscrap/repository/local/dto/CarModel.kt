@@ -20,3 +20,8 @@ data class CarModel(
     val mileage: Int,
     val filterId: String
 )
+
+data class EnginePowerCount(
+    val enginePower: Int,
+    val count: Int
+)

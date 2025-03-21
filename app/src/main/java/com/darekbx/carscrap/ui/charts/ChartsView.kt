@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.darekbx.carscrap.domain.ChartData
 import com.darekbx.carscrap.repository.local.dto.CarModel
-import com.darekbx.carscrap.repository.local.dto.Filter
+import com.darekbx.carscrap.ui.filtering.FilteringView
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -55,14 +55,19 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
     val years by chartsViewModel.years
     val chartData by chartsViewModel.chartData
     var openFiltering by remember { mutableStateOf(false) }
+    var filteredChartData by remember { mutableStateOf(chartData) }
 
     LaunchedEffect(Unit) {
         chartsViewModel.fetchYears(filterId)
         chartsViewModel.fetchChartData(filterId)
     }
 
+    LaunchedEffect(chartData) {
+        filteredChartData = chartData
+    }
+
     when {
-        chartData.isNotEmpty() -> Chart(Modifier.fillMaxSize(), years, chartData) {
+        filteredChartData.isNotEmpty() -> Chart(Modifier.fillMaxSize(), years, filteredChartData) {
             openFiltering = true
         }
 
@@ -71,7 +76,18 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
 
     if (openFiltering) {
         Popup {
-            FilteringView()
+            FilteringView(filterId, onApply = { filterInfo ->
+                filteredChartData = chartData.map { chartDataItem ->
+                    chartDataItem.copy(
+                        carModels = chartDataItem.carModels.filter { carModel ->
+                            (filterInfo.fuelType.isEmpty() || carModel.fuelType in filterInfo.fuelType) &&
+                                    (filterInfo.enginePower.isEmpty() || carModel.enginePower in filterInfo.enginePower) &&
+                                    (filterInfo.gearbox.isEmpty() || carModel.gearbox in filterInfo.gearbox)
+                        }
+                    )
+                }
+                openFiltering = false
+            })
         }
     }
 }
@@ -193,6 +209,10 @@ fun PriceChart(
     selectedYear: Int? = null,
     drawLines: Boolean = true
 ) {
+    if (chartData.isEmpty()) {
+        return
+    }
+
     val measurer = rememberTextMeasurer()
     val circleBgColor = MaterialTheme.colorScheme.surfaceContainer
     val allCars = chartData.flatMap { it.carModels }

@@ -9,6 +9,7 @@ import androidx.room.Room
 import com.darekbx.carscrap.domain.DataCountUseCase
 import com.darekbx.carscrap.domain.FetchChartDataUseCase
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
+import com.darekbx.carscrap.domain.FilteringUseCase
 import com.darekbx.carscrap.domain.SaveFilterUseCase
 import com.darekbx.carscrap.repository.SynchronizeBus
 import com.darekbx.carscrap.repository.local.CacheDatabase
@@ -22,6 +23,7 @@ import com.darekbx.carscrap.repository.remote.scrap.ModelGenerations
 import com.darekbx.carscrap.ui.charts.ChartsViewModel
 import com.darekbx.carscrap.ui.filter.CarMakes
 import com.darekbx.carscrap.ui.filter.FilterViewModel
+import com.darekbx.carscrap.ui.filtering.FilteringViewModel
 import com.darekbx.carscrap.ui.main.MainViewModel
 import com.darekbx.carscrap.ui.synchronization.SynchronizeViewModel
 import com.darekbx.carscrap.utils.DateTimeFormatter
@@ -67,6 +69,7 @@ val viewModelModule = module {
     viewModel { ChartsViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { FilterViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { FilteringViewModel(get()) }
 }
 
 val domainModule = module {
@@ -74,4 +77,5 @@ val domainModule = module {
     factory { DataCountUseCase(get()) }
     factory { SaveFilterUseCase(get()) }
     factory { FetchFiltersUseCase(get()) }
+    factory { FilteringUseCase(get()) }
 }

@@ -11,6 +11,7 @@ private val DarkColorScheme = darkColorScheme(
     surface = Color(0xFFEEEEEE),
     onSurface = Color.LightGray,
     surfaceContainer = Color(0xFF282828),
+    tertiaryContainer = Color(0xFF404040),
     primary = Green,
     secondary = Color.Black,
     tertiary = Pink80

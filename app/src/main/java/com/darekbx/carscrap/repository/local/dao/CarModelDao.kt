@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.darekbx.carscrap.repository.local.dto.CarModel
+import com.darekbx.carscrap.repository.local.dto.EnginePowerCount
 
 data class YearCount(val year: Int, val row_count: Int)
 
@@ -39,4 +40,13 @@ interface CarModelDao {
 
     @Query("UPDATE car_model SET filterId = :newFilterId WHERE filterId = :oldFilterId")
     suspend fun updateFilterId(newFilterId: String, oldFilterId: String)
+
+    @Query("SELECT DISTINCT fuelType FROM car_model WHERE filterId = :filterId")
+    suspend fun getDistinctFuelTypes(filterId: String): List<String>
+
+    @Query("SELECT enginePower, COUNT(*) as count FROM car_model WHERE filterId = :filterId GROUP BY enginePower")
+    suspend fun getDistinctEnginePowers(filterId: String): List<EnginePowerCount>
+
+    @Query("SELECT DISTINCT gearbox FROM car_model WHERE filterId = :filterId")
+    suspend fun getDistinctGearboxes(filterId: String): List<String>
 }
