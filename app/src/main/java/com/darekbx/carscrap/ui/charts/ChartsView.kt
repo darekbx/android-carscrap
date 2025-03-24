@@ -54,12 +54,16 @@ import org.koin.androidx.compose.koinViewModel
 fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinViewModel()) {
     val years by chartsViewModel.years
     val chartData by chartsViewModel.chartData
+    val filterInfoCount by chartsViewModel.filterInfoCount
     var openFiltering by remember { mutableStateOf(false) }
     var filteredChartData by remember { mutableStateOf(chartData) }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         chartsViewModel.fetchYears(filterId)
         chartsViewModel.fetchChartData(filterId)
+        chartsViewModel.fetchFilterInfoCount(filterId)
+        isLoading = false
     }
 
     LaunchedEffect(chartData) {
@@ -67,8 +71,10 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
     }
 
     when {
-        filteredChartData.isNotEmpty() -> Chart(Modifier.fillMaxSize(), years, filteredChartData) {
-            openFiltering = true
+        !isLoading && filteredChartData.isNotEmpty() -> {
+            Chart(Modifier.fillMaxSize(), years, filteredChartData, filterInfoCount) {
+                openFiltering = true
+            }
         }
 
         else -> ProgressView()
@@ -89,6 +95,10 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
                 openFiltering = false
             })
         }
+    } else {
+        LaunchedEffect(Unit) {
+            chartsViewModel.fetchFilterInfoCount(filterId)
+        }
     }
 }
 
@@ -104,6 +114,7 @@ fun Chart(
     modifier: Modifier,
     years: List<Int>,
     chartData: List<ChartData>,
+    filtersCount: Int = 0,
     openFilters: () -> Unit = { }
 ) {
     var selectedYear by remember { mutableStateOf<Int?>(null) }
@@ -147,7 +158,7 @@ fun Chart(
             )
             Spacer(modifier = Modifier.weight(1F))
             Text(
-                text = "Filters (0)",
+                text = "Filters ($filtersCount)",
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 modifier = Modifier.clickable { openFilters() },
@@ -221,9 +232,10 @@ fun PriceChart(
     val maxValue = allCars.maxOf { it.price }
     val minValue = allCars.minOf { it.price }
 
-    Canvas(modifier = modifier
-        .padding(8.dp)
-        .onGloballyPositioned { viewSize = it.size }
+    Canvas(
+        modifier = modifier
+            .padding(8.dp)
+            .onGloballyPositioned { viewSize = it.size }
     ) {
         val rightOffset = 70F
         val height = viewSize.height.toFloat()

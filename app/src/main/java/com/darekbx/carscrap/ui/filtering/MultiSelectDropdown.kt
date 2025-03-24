@@ -1,6 +1,5 @@
 package com.darekbx.carscrap.ui.filtering
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 
 data class AnnotatedItem(val text: String, val label: AnnotatedString) {
-
     constructor(text: String) : this(text, AnnotatedString(text))
 }
 
@@ -39,10 +37,11 @@ data class AnnotatedItem(val text: String, val label: AnnotatedString) {
 fun MultiSelectDropdown(
     items: List<AnnotatedItem>,
     label: String = "Select Items",
+    selected: List<String> = emptyList(),
     onSelectionChanged: (List<String>) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedItems by remember { mutableStateOf(listOf<String>()) }
+    var selectedItems by remember { mutableStateOf(selected) }
 
     val displayText = when {
         selectedItems.isEmpty() -> label
@@ -66,13 +65,11 @@ fun MultiSelectDropdown(
         ) {
             Text(
                 text = displayText ?: label,
-                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(8.dp)
             )
             Icon(
                 imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                 contentDescription = "Dropdown Arrow",
-                tint = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(8.dp)
             )
         }
@@ -83,7 +80,6 @@ fun MultiSelectDropdown(
             onDismissRequest = { expanded = false },
             modifier = Modifier
                 .heightIn(max = 280.dp)
-                .background(MaterialTheme.colorScheme.tertiaryContainer)
         ) {
             items.forEach { item ->
                 val isSelected = selectedItems.contains(item.text)

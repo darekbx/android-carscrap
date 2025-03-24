@@ -8,13 +8,16 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.darekbx.carscrap.domain.DataCountUseCase
 import com.darekbx.carscrap.domain.FetchChartDataUseCase
+import com.darekbx.carscrap.domain.FetchFilterInfoUseCase
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
 import com.darekbx.carscrap.domain.FilteringUseCase
+import com.darekbx.carscrap.domain.SaveFilterInfoUseCase
 import com.darekbx.carscrap.domain.SaveFilterUseCase
 import com.darekbx.carscrap.repository.SynchronizeBus
 import com.darekbx.carscrap.repository.local.CacheDatabase
 import com.darekbx.carscrap.repository.local.dao.CarModelDao
 import com.darekbx.carscrap.repository.local.dao.FilterDao
+import com.darekbx.carscrap.repository.local.dao.FilterInfoDao
 import com.darekbx.carscrap.repository.remote.RemoteData
 import com.darekbx.carscrap.repository.remote.TimeProvider
 import com.darekbx.carscrap.repository.remote.scrap.FilterFetch
@@ -31,7 +34,6 @@ import com.darekbx.carscrap.worker.KoinWorkerFactory
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -41,11 +43,16 @@ val appModule = module {
     single<CacheDatabase> {
         Room
             .databaseBuilder(get<Application>(), CacheDatabase::class.java, CacheDatabase.DB_NAME)
-            .addMigrations(CacheDatabase.MIGRATION_1_2)
+            .addMigrations(
+                CacheDatabase.MIGRATION_1_2,
+                CacheDatabase.MIGRATION_2_3,
+                CacheDatabase.MIGRATION_3_4
+            )
             .build()
     }
     single<CarModelDao> { get<CacheDatabase>().carModelDao() }
     single<FilterDao> { get<CacheDatabase>().filterDao() }
+    single<FilterInfoDao> { get<CacheDatabase>().filterInfoDao() }
 
     single { CarMakes() }
     single { TimeProvider() }
@@ -54,7 +61,7 @@ val appModule = module {
     single { SynchronizeBus() }
     single { Gson() }
 
-    factory { RemoteData(get(), get(), get(), get(), get(), /*, limit = 25*/) }
+    factory { RemoteData(get(), get(), get(), get(), get() /*, limit = 25*/) }
 
     factory { OkHttpClient() }
     factory { FilterVerification(get(), get()) }
@@ -66,10 +73,10 @@ val appModule = module {
 
 val viewModelModule = module {
     viewModel { SynchronizeViewModel(get()) }
-    viewModel { ChartsViewModel(get(), get()) }
+    viewModel { ChartsViewModel(get(), get(), get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { FilterViewModel(get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { FilteringViewModel(get()) }
+    viewModel { FilteringViewModel(get(), get(), get()) }
 }
 
 val domainModule = module {
@@ -78,4 +85,6 @@ val domainModule = module {
     factory { SaveFilterUseCase(get()) }
     factory { FetchFiltersUseCase(get()) }
     factory { FilteringUseCase(get()) }
+    factory { FetchFilterInfoUseCase(get()) }
+    factory { SaveFilterInfoUseCase(get()) }
 }

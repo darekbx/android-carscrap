@@ -4,7 +4,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.darekbx.carscrap.domain.FetchFilterInfoUseCase
 import com.darekbx.carscrap.domain.FilteringUseCase
+import com.darekbx.carscrap.domain.SaveFilterInfoUseCase
 import com.darekbx.carscrap.repository.local.dto.EnginePowerCount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,7 +33,11 @@ data class FilterInfo(
     }
 }
 
-class FilteringViewModel(private val filteringUseCase: FilteringUseCase) : ViewModel() {
+class FilteringViewModel(
+    private val filteringUseCase: FilteringUseCase,
+    private val fetchFilterInfoUseCase: FetchFilterInfoUseCase,
+    private val saveFilterInfoUseCase: SaveFilterInfoUseCase
+) : ViewModel() {
 
     private val _fuelTypes = mutableStateOf<List<String>>(emptyList())
     val fuelTypes: State<List<String>>
@@ -53,5 +59,18 @@ class FilteringViewModel(private val filteringUseCase: FilteringUseCase) : ViewM
                 _gearboxes.value = filteringUseCase.getDistinctGearboxes(filterId)
             }
         }
+    }
+
+    fun saveFilterInfo(filterId: String, filterInfo: FilterInfo, onSaved: () -> Unit) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                saveFilterInfoUseCase.saveFilterInfo(filterId, filterInfo)
+                onSaved()
+            }
+        }
+    }
+
+    suspend fun fetchFilterInfo(filterId: String): FilterInfo? {
+        return fetchFilterInfoUseCase.getFilterInfo(filterId)
     }
 }

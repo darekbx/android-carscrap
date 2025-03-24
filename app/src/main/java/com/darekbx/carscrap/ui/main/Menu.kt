@@ -58,7 +58,10 @@ fun MenuRow(
         modifier
             .fillMaxWidth()
             .height(64.dp)
-            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium)
+            .background(
+                MaterialTheme.colorScheme.surfaceContainer,
+                MaterialTheme.shapes.medium
+            )
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -78,12 +81,11 @@ fun MenuRow(
 
 @Composable
 private fun MenuItem(iconResId: Int, isActive: Boolean = false, onClick: () -> Unit) {
-    val borderModifier = Modifier.border(2.dp, MaterialTheme.colorScheme.background, CircleShape)
+    val borderModifier = Modifier.border(width=2.dp, shape=CircleShape, color=MaterialTheme.colorScheme.primary)
     Box(
         modifier = Modifier
             .aspectRatio(1F)
             .fillMaxHeight()
-            .background(Color.Black.copy(alpha = 0.05F), CircleShape)
             .clickable { onClick() }
             .then(if (isActive) borderModifier else Modifier),
         contentAlignment = Alignment.Center
@@ -92,7 +94,7 @@ private fun MenuItem(iconResId: Int, isActive: Boolean = false, onClick: () -> U
             painter = painterResource(iconResId),
             modifier = Modifier.size(24.dp),
             contentDescription = null,
-            tint = if (isActive) MaterialTheme.colorScheme.background else Color.Gray
+            tint = if (isActive) Color.Gray else MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
 }
@@ -109,7 +111,6 @@ private fun RowsCount(count: Int) {
             }
         },
         style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.secondary,
         modifier = Modifier.padding(8.dp)
     )
 }
