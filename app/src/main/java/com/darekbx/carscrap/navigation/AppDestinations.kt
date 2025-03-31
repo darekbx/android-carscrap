@@ -2,15 +2,18 @@ package com.darekbx.carscrap.navigation
 
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-
+import com.darekbx.carscrap.navigation.AppDestinations.Companion.filterIdArg
 
 interface AppDestinations {
     val route: String
+
+    companion object {
+        const val filterIdArg = "filter_id"
+    }
 }
 
 object ChartDestination : AppDestinations {
     override val route = "chart"
-    const val filterIdArg = "filter_id"
     val routeWithArgs = "${route}?$filterIdArg={${filterIdArg}}"
     val arguments = listOf(
         navArgument(filterIdArg) {
@@ -22,8 +25,7 @@ object ChartDestination : AppDestinations {
 
 object ListDestination : AppDestinations {
     override val route = "list"
-    const val filterIdArg = "filter_id"
-    val routeWithArgs = "${ListDestination.route}?$filterIdArg={${filterIdArg}}"
+    val routeWithArgs = "${route}?$filterIdArg={${filterIdArg}}"
     val arguments = listOf(
         navArgument(filterIdArg) {
             nullable = false
@@ -34,8 +36,7 @@ object ListDestination : AppDestinations {
 
 object StatisticsDestination : AppDestinations {
     override val route = "statistics"
-    const val filterIdArg = "filter_id"
-    val routeWithArgs = "${StatisticsDestination.route}?$filterIdArg={${filterIdArg}}"
+    val routeWithArgs = "${route}?$filterIdArg={${filterIdArg}}"
     val arguments = listOf(
         navArgument(filterIdArg) {
             nullable = false

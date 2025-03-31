@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.darekbx.carscrap.R
+import com.darekbx.carscrap.navigation.AppDestinations.Companion.filterIdArg
 import com.darekbx.carscrap.navigation.ChartDestination
 import com.darekbx.carscrap.navigation.FiltersDestination
 import com.darekbx.carscrap.navigation.ListDestination
@@ -50,6 +51,7 @@ enum class MenuItemType(val iconResId: Int, val route: String) {
 fun MenuRow(
     modifier: Modifier,
     rowCount: Int,
+    selectedFilterId: String,
     navController: NavController
 ) {
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -71,7 +73,9 @@ fun MenuRow(
                 item.iconResId,
                 isActive = currentDestination?.route?.startsWith(item.route) ?: false,
             ) {
-                navController.navigate(item.route)
+                navController.navigate(
+                    "${item.route}?${filterIdArg}=${selectedFilterId}"
+                )
             }
         }
         Spacer(Modifier.weight(1F))
@@ -81,7 +85,11 @@ fun MenuRow(
 
 @Composable
 private fun MenuItem(iconResId: Int, isActive: Boolean = false, onClick: () -> Unit) {
-    val borderModifier = Modifier.border(width=2.dp, shape=CircleShape, color=MaterialTheme.colorScheme.primary)
+    val borderModifier = Modifier.border(
+        width = 2.dp,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary
+    )
     Box(
         modifier = Modifier
             .aspectRatio(1F)
@@ -120,6 +128,6 @@ private fun RowsCount(count: Int) {
 fun MenuRowPreview() {
     CarScrapTheme {
         val context = LocalContext.current
-        MenuRow(Modifier, 4231, NavController(context))
+        MenuRow(Modifier, 4231, "filter_id", NavController(context))
     }
 }

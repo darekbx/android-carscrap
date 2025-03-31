@@ -63,7 +63,7 @@ class DataRefreshWorker(
 
         // Build the notification
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.drawable.ic_sync_notify)
             .setContentTitle("Sync completed")
             .setContentText("Added $itemsCount new cars")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

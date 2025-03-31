@@ -35,10 +35,10 @@ class MainViewModel(
         }
     }
 
-    fun fetchCount() {
+    fun fetchCount(selectedFilterId: String) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _count.value = countUseCase.countData()
+                _count.value = countUseCase.countData(selectedFilterId)
             }
         }
     }

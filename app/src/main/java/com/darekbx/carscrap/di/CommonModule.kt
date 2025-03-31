@@ -10,6 +10,7 @@ import com.darekbx.carscrap.domain.DataCountUseCase
 import com.darekbx.carscrap.domain.FetchChartDataUseCase
 import com.darekbx.carscrap.domain.FetchFilterInfoUseCase
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
+import com.darekbx.carscrap.domain.FetchListDataUseCase
 import com.darekbx.carscrap.domain.FilteringUseCase
 import com.darekbx.carscrap.domain.SaveFilterInfoUseCase
 import com.darekbx.carscrap.domain.SaveFilterUseCase
@@ -27,6 +28,7 @@ import com.darekbx.carscrap.ui.charts.ChartsViewModel
 import com.darekbx.carscrap.ui.filter.CarMakes
 import com.darekbx.carscrap.ui.filter.FilterViewModel
 import com.darekbx.carscrap.ui.filtering.FilteringViewModel
+import com.darekbx.carscrap.ui.list.ListViewModel
 import com.darekbx.carscrap.ui.main.MainViewModel
 import com.darekbx.carscrap.ui.synchronization.SynchronizeViewModel
 import com.darekbx.carscrap.utils.DateTimeFormatter
@@ -77,6 +79,7 @@ val viewModelModule = module {
     viewModel { MainViewModel(get(), get()) }
     viewModel { FilterViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { FilteringViewModel(get(), get(), get()) }
+    viewModel { ListViewModel(get()) }
 }
 
 val domainModule = module {
@@ -87,4 +90,5 @@ val domainModule = module {
     factory { FilteringUseCase(get()) }
     factory { FetchFilterInfoUseCase(get()) }
     factory { SaveFilterInfoUseCase(get()) }
+    factory { FetchListDataUseCase(get()) }
 }

@@ -143,6 +143,6 @@ class FilterFetch(
     }
 
     companion object {
-        private val TAG = "FilterFetch"
+        private const val TAG = "FilterFetch"
     }
 }

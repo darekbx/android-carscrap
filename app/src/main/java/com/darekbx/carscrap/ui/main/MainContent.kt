@@ -11,6 +11,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,11 +28,14 @@ fun MainContent(
     navController: NavHostController,
     mainViewModel: MainViewModel = koinViewModel()
 ) {
+    var selectedFilterId by remember { mutableStateOf<String?>(null) }
     val count by mainViewModel.count
     val firebaseSynchronization = false
 
-    LaunchedEffect(Unit) {
-        mainViewModel.fetchCount()
+    LaunchedEffect(selectedFilterId) {
+        selectedFilterId?.let {
+            mainViewModel.fetchCount(it)
+        }
     }
 
     Column(
@@ -52,7 +58,9 @@ fun MainContent(
             AppNavHost(
                 modifier = Modifier,
                 navController = navController
-            )
+            ) { filterId ->
+                selectedFilterId = filterId
+            }
         }
 
         if (firebaseSynchronization) {
@@ -63,11 +71,13 @@ fun MainContent(
             )
         }
 
-        MenuRow(
-            modifier = Modifier
-                .padding(start = 8.dp, top = 4.dp, bottom = 8.dp, end = 8.dp),
-            rowCount = count,
-            navController = navController
-        )
+        selectedFilterId?.let {
+            MenuRow(
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 8.dp, end = 8.dp),
+                rowCount = count,
+                selectedFilterId = it,
+                navController = navController
+            )
+        }
     }
 }
