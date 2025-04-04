@@ -16,6 +16,7 @@ import com.darekbx.carscrap.ui.theme.CarScrapTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -65,7 +66,7 @@ fun ListView(filterId: String = "", viewModel: ListViewModel = koinViewModel()) 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ListView(cars: List<CarModel>) {
-
+    var activeCarModel by remember { mutableStateOf<CarModel?>(null) }
     val columns = listOf(
         ColumnDefinition<CarModel>(
             title = "Price",
@@ -80,40 +81,63 @@ fun ListView(cars: List<CarModel>) {
             sortFunction = { it.sortedBy { car -> car.mileage } }
         ),
         ColumnDefinition(
+            title = "Power",
+            weight = 1f,
+            content = { Text("${it.enginePower}") },
+            sortFunction = { it.sortedBy { car -> car.enginePower } }
+        ),
+        ColumnDefinition(
             title = "Year",
-            weight = 2f,
+            weight = 1f,
             content = { Text("${it.year}") },
             sortFunction = { it.sortedBy { car -> car.year } }
+        ),
+        ColumnDefinition(
+            title = "Country",
+            weight = 1f,
+            content = { Text(it.countryOrigin) },
+            sortFunction = { it.sortedBy { car -> car.countryOrigin } }
         )
     )
 
     SortableTable(
         data = cars,
         columns = columns,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    )
+        modifier = Modifier.fillMaxSize()
+    ) {
+        activeCarModel = it
+    }
+
+    activeCarModel?.let {
+        CarModelDialog(
+            carModel = it,
+            onDismiss = { activeCarModel = null }
+        )
+    }
 }
 
 @Composable
 fun <T> SortableTable(
     data: List<T>,
     columns: List<ColumnDefinition<T>>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onItemClick: (T) -> Unit = {}
 ) {
     var sortedData by remember { mutableStateOf(data) }
     Column(modifier = modifier) {
         Header(columns, data) { sortedData = it }
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        LazyColumn {
+        LazyColumn(modifier = Modifier.padding(bottom = 12.dp)) {
             items(sortedData) { item ->
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)) {
                     columns.forEach { column ->
                         Box(
                             modifier = Modifier
                                 .weight(column.weight)
                                 .padding(8.dp)
+                                .clickable(onClick = { onItemClick(item) })
                         ) {
                             column.content(item)
                         }
@@ -136,7 +160,10 @@ private fun <T> Header(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+            )
             .padding(vertical = 8.dp)
     ) {
         columns.forEach { column ->
