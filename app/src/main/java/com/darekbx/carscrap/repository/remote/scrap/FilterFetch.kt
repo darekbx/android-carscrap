@@ -11,9 +11,11 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class FilterFetch(
     private val gson: Gson,
@@ -137,9 +139,18 @@ class FilterFetch(
     }
 
     private fun parseCreatedAt(createdAt: String): Long {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        val localDateTime = LocalDateTime.parse(createdAt, formatter)
-        return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli()
+        try {
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val localDateTime = LocalDateTime.parse(createdAt, formatter)
+            return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli()
+        } catch (e: Exception) {
+            return try {
+                val instant = Instant.parse(createdAt)
+                instant.toEpochMilli()
+            } catch (e: DateTimeParseException) {
+                0L
+            }
+        }
     }
 
     companion object {

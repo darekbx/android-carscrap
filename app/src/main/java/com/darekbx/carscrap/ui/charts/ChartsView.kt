@@ -81,7 +81,7 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
     }
 
     if (openFiltering) {
-        Popup {
+        //Popup {
             FilteringView(filterId, onApply = { filterInfo ->
                 filteredChartData = chartData.map { chartDataItem ->
                     chartDataItem.copy(
@@ -94,7 +94,7 @@ fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinVie
                 }
                 openFiltering = false
             })
-        }
+        //}
     } else {
         LaunchedEffect(Unit) {
             chartsViewModel.fetchFilterInfoCount(filterId)

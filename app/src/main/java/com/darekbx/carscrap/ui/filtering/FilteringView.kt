@@ -50,8 +50,7 @@ fun FilteringView(
 
     Box(
         Modifier
-            .padding(4.dp)
-            .padding(bottom = 8.dp)
+            .padding(8.dp)
             .fillMaxSize()
             .background(
                 MaterialTheme.colorScheme.surfaceContainer,
@@ -66,7 +65,7 @@ fun FilteringView(
                     .size(48.dp)
             )
         } else {
-            Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text(
                         text = "Filters",
