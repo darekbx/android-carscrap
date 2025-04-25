@@ -22,7 +22,8 @@ import java.util.*
 @Composable
 fun CarModelDialog(
     carModel: CarModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     Dialog(onDismissRequest = onDismiss) {
@@ -60,13 +61,28 @@ fun CarModelDialog(
 
                 ClickableUrlRow(label = "URL", url = carModel.url)
 
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
                 ) {
-                    Text("Close")
+                    Button(
+                        onClick = { onDelete() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1F)
+                            .padding(end = 4.dp)
+                    ) {
+                        Text("Delete")
+                    }
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1F)
+                            .padding(start = 4.dp)
+                    ) {
+                        Text("Close")
+                    }
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.darekbx.carscrap.domain.DataCountUseCase
+import com.darekbx.carscrap.domain.DeleteCarModelUseCase
 import com.darekbx.carscrap.domain.FetchChartDataUseCase
 import com.darekbx.carscrap.domain.FetchFilterInfoUseCase
 import com.darekbx.carscrap.domain.FetchFiltersUseCase
@@ -79,7 +80,7 @@ val viewModelModule = module {
     viewModel { MainViewModel(get(), get()) }
     viewModel { FilterViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { FilteringViewModel(get(), get(), get()) }
-    viewModel { ListViewModel(get()) }
+    viewModel { ListViewModel(get(), get()) }
 }
 
 val domainModule = module {
@@ -91,4 +92,5 @@ val domainModule = module {
     factory { FetchFilterInfoUseCase(get()) }
     factory { SaveFilterInfoUseCase(get()) }
     factory { FetchListDataUseCase(get()) }
+    factory { DeleteCarModelUseCase(get()) }
 }

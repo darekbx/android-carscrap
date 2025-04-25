@@ -60,12 +60,14 @@ fun ListView(filterId: String = "", viewModel: ListViewModel = koinViewModel()) 
         return
     }
 
-    ListView(cars)
+    ListView(cars, onDelete = { id ->
+        viewModel.delete(id)
+    })
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListView(cars: List<CarModel>) {
+fun ListView(cars: List<CarModel>, onDelete: (String) -> Unit = {}) {
     var activeCarModel by remember { mutableStateOf<CarModel?>(null) }
     val columns = listOf(
         ColumnDefinition<CarModel>(
@@ -111,7 +113,13 @@ fun ListView(cars: List<CarModel>) {
     activeCarModel?.let {
         CarModelDialog(
             carModel = it,
-            onDismiss = { activeCarModel = null }
+            onDismiss = { activeCarModel = null },
+            onDelete = {
+                activeCarModel?.id?.let {
+                    onDelete(it)
+                }
+                activeCarModel = null
+            }
         )
     }
 }

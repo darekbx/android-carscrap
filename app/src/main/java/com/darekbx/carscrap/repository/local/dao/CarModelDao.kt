@@ -35,6 +35,9 @@ interface CarModelDao {
     @Query("DELETE FROM car_model WHERE filterId = :filterId")
     suspend fun deleteAll(filterId: String = ""): Int
 
+    @Query("DELETE FROM car_model WHERE id = :id")
+    suspend fun delete(id: String = ""): Int
+
     @Query("DELETE FROM car_model WHERE externalId = 0")
     suspend fun deleteSpecial(): Int
 
