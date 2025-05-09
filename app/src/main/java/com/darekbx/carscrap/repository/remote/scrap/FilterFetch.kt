@@ -5,6 +5,8 @@ import com.darekbx.carscrap.repository.local.dao.CarModelDao
 import com.darekbx.carscrap.repository.local.dao.FilterDao
 import com.darekbx.carscrap.repository.local.dto.CarModel
 import com.darekbx.carscrap.repository.remote.scrap.Common.addHeaders
+import com.darekbx.carscrap.repository.remote.scrap.update.ApiRequest
+import com.darekbx.carscrap.repository.remote.scrap.update.Filter
 import com.google.gson.Gson
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -29,9 +31,16 @@ class FilterFetch(
         onCompleted: (Int) -> Unit = { }
     ) {
         val filter = filterDao.getFilter(filterId)
-        val requestData = FilterRequest().apply {
-            setFilterValues(filter.make, filter.model, filter.generation, filter.salvage)
+        val apiRequest = ApiRequest().apply {
+            filters = listOf(
+                Filter(name = "filter_enum_make", value = filter.make),
+                Filter(name = "filter_enum_model", value = filter.model),
+                Filter(name = "filter_enum_generation", value = filter.generation),
+                Filter(name = "filter_enum_damaged", value = if (filter.salvage) "1" else "0"),
+                Filter(name = "category_id", value = "29")
+            )
         }
+
         val externalIds = carModelDao.fetchIds(filterId)
         var page = 1
 
@@ -41,9 +50,9 @@ class FilterFetch(
             var addedCount = 0
             while (true) {
                 Log.d(TAG, "Fetch page: $page")
-                requestData.variables.page = page
+                apiRequest.page = page
 
-                val request = createRequest(requestData)
+                val request = createRequest(apiRequest)
                 val result = runCatching { client.newCall(request).execute() }
                 val response = result.getOrNull()
 
@@ -96,12 +105,13 @@ class FilterFetch(
         }
     }
 
-    private fun createRequest(requestData: FilterRequest): Request {
-        val jsonRequest = gson.toJson(requestData)
-        val mediaType = "application/json".toMediaTypeOrNull()
-        val requestBody = jsonRequest.toRequestBody(mediaType)
-        val request =
-            Request.Builder().url(Common.url).apply { addHeaders() }.post(requestBody).build()
+    private fun createRequest(apiRequest: ApiRequest): Request {
+        val jsonRequest = gson.toJson(apiRequest)
+        val request = Request.Builder()
+            .url("${Common.url}?operationName=listingScreen&variables=$jsonRequest&extensions={\"persistedQuery\":{\"sha256Hash\":\"1a840f0ab7fbe2543d0d6921f6c963de8341e04a4548fd1733b4a771392f900a\",\"version\":1}}")
+            .apply { addHeaders() }
+            .get()
+            .build()
         return request
     }
 
