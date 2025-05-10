@@ -41,8 +41,38 @@ class DataRefreshWorker(
             Result.success()
         } catch (e: Exception) {
             Log.e("CoroutineWorker", "Error in worker", e)
+            showFailedNotification(e.message ?: "Unknown error")
             Result.failure()
         }
+    }
+
+    private fun showFailedNotification(error: String) {
+        val context = applicationContext
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Create notification channel (required for Android 8.0 and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Work Results",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notifications for work results"
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // Build the notification
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_sync_notify)
+            .setContentTitle("Sync FAILED!")
+            .setContentText(error)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        // Show the notification
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     private fun showNotification(itemsCount: Int) {
