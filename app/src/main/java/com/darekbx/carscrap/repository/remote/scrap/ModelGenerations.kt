@@ -55,5 +55,5 @@ class ModelGenerations(private val gson: Gson, private val client: OkHttpClient)
     }
 
     private fun filterGenerations(verificationResponse: CommonResponse) =
-        verificationResponse.data.advertSearch.alternativeLinks.find { it.name == "generations" }?.links
+        verificationResponse.data.advertSearch?.alternativeLinks?.find { it.name == "generations" }?.links
 }

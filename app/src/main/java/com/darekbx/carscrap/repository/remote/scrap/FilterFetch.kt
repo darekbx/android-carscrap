@@ -63,7 +63,7 @@ class FilterFetch(
 
                 val responseBody = response.body?.string()
                 val fetchResponse = gson.fromJson(responseBody, CommonResponse::class.java)
-                val jsonData = fetchResponse.data.advertSearch
+                val jsonData = fetchResponse.data.advertSearch ?: continue
 
                 val totalCount = jsonData.totalCount
                 val pageSize = jsonData.pageInfo.pageSize
