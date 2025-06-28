@@ -68,6 +68,7 @@ class DataRefreshWorker(
             .setContentTitle("Sync FAILED!")
             .setContentText(error)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSilent(true)
             .setAutoCancel(true)
             .build()
 
