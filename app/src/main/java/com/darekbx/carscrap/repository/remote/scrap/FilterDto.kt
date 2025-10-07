@@ -113,7 +113,7 @@ data class CommonResponse(
 )
 
 data class Data(
-    val advertSearch: AdvertSearch
+    val advertSearch: AdvertSearch?
 )
 
 data class AdvertSearch(

@@ -27,7 +27,7 @@ class FilterVerification(private val gson: Gson, private val client: OkHttpClien
                     if (response?.isSuccessful == true) {
                         val responseBody = response.body?.string()
                         val response = gson.fromJson(responseBody, CommonResponse::class.java)
-                        val result = Result.success(response.data.advertSearch.totalCount > 0)
+                        val result = Result.success((response.data.advertSearch?.totalCount ?: 0) > 0)
                         continuation.resumeWith(result)
                     } else {
                         continuation.resumeWith(Result.failure(Exception("HTTP failed: ${response?.code}")))
