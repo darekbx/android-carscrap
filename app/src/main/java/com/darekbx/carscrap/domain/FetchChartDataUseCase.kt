@@ -8,6 +8,7 @@ class FetchChartDataUseCase(private val carModelDao: CarModelDao) {
     suspend fun fetchYears(filterId: String): List<Int> {
         return carModelDao
             .fetchYears(filterId, MIN_ITEMS_COUNT)
+            .filter { it.year >= MIN_YEAR }
             .map { it.year }
             .sorted()
     }
@@ -16,13 +17,15 @@ class FetchChartDataUseCase(private val carModelDao: CarModelDao) {
         return carModelDao
             .fetch(filterId)
             .groupBy { it.year }
+            .filterKeys { it >= MIN_YEAR }
             .filterValues { it.size >= MIN_ITEMS_COUNT }
             .map { ChartData(it.key, it.value) }
             .sortedBy { it.year }
     }
 
     companion object {
-        val MIN_ITEMS_COUNT = 5
+        val MIN_ITEMS_COUNT = 15
+        val MIN_YEAR = 2012
     }
 }
 

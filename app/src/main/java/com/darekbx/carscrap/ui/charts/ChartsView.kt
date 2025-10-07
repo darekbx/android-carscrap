@@ -49,7 +49,7 @@ import com.darekbx.carscrap.repository.local.dto.CarModel
 import com.darekbx.carscrap.ui.filtering.FilteringView
 import com.darekbx.carscrap.ui.theme.CarScrapTheme
 import org.koin.androidx.compose.koinViewModel
-import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun ChartsView(filterId: String = "", chartsViewModel: ChartsViewModel = koinViewModel()) {
@@ -249,11 +249,10 @@ fun PriceChart(
             val items = carsForYear.carModels
             val wRatio = width / (items.size - 1)
 
-            val colorIndex = max(i, colors.size - 1)
             val color = when (selectedYear) {
-                null -> colors[colorIndex]
-                carsForYear.year -> colors[colorIndex]
-                else -> colors[colorIndex].copy(alpha = 0.2F)
+                null -> colors[i]
+                carsForYear.year -> colors[i]
+                else -> colors[i].copy(alpha = 0.2F)
             }
 
             val focusChart = selectedYear != null && selectedYear == carsForYear.year
