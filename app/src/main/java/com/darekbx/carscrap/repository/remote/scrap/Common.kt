@@ -10,7 +10,6 @@ object Common {
         "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:132.0) Gecko/20100101 Firefox/132.0",
         "Accept" to "application/graphql-response+json, application/graphql+json, application/json, text/event-stream, multipart/mixed",
         "Accept-Language" to "en-US,en;q=0.5",
-        "Accept-Encoding" to "gzip, deflate, br, zstd",
         "content-type" to "application/json"
     )
 
